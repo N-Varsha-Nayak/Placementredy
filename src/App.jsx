@@ -1,7 +1,30 @@
-import DesignSystemShowcase from './components/DesignSystemShowcase'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
+import DashboardLayout from './pages/DashboardLayout';
+import Dashboard from './pages/Dashboard';
+import Practice from './pages/Practice';
+import Assessments from './pages/Assessments';
+import Resources from './pages/Resources';
+import Profile from './pages/Profile';
+import './App.css';
 
 function App() {
-  return <DesignSystemShowcase />
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="practice" element={<Practice />} />
+          <Route path="assessments" element={<Assessments />} />
+          <Route path="resources" element={<Resources />} />
+          <Route path="profile" element={<Profile />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
+

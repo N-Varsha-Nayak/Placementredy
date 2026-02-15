@@ -1,13 +1,21 @@
-/* KodNest Premium Build System - Design System Imports */
+@import "tailwindcss";
 
-/* Design tokens and CSS variables */
-@import './design-system/tokens.css';
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-/* Global base styles and typography */
-@import './design-system/base.css';
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-/* Component styles */
-@import './design-system/components.css';
+#root {
+  width: 100%;
+  height: 100%;
+}
 
-/* Layout structure styles */
-@import './design-system/layout.css';
