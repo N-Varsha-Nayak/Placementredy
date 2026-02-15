@@ -1,3 +1,4 @@
+// src/pages/LandingPage.jsx
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Video, TrendingUp, ArrowRight, Check } from 'lucide-react';
 
@@ -34,131 +35,140 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-white to-gray-50">
+    <div className="min-h-screen w-full bg-gray-50 text-gray-900">
       {/* Navigation */}
-      <nav className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-4 md:px-8">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-lg flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-white" />
+      <nav className="bg-white border-b border-gray-200">
+        <div className="app-container flex items-center justify-between py-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-purple-600 rounded-md flex items-center justify-center">
+              <BookOpen className="w-5 h-5 text-white" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">PlacementPrep</h1>
+            <h1 className="text-lg font-semibold">PlacementPrep</h1>
           </div>
-          <button
-            onClick={handleGetStarted}
-            className="rounded-lg bg-purple-600 px-6 py-2 font-semibold text-white transition-colors hover:bg-purple-700"
-          >
-            Sign In
-          </button>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleGetStarted}
+              className="btn btn-primary"
+              aria-label="Sign in"
+            >
+              Sign In
+            </button>
+          </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="mx-auto w-full max-w-7xl px-5 py-14 md:px-8 md:py-20">
-        <div className="grid items-center gap-12 md:grid-cols-2 lg:gap-16">
+      <header className="py-16">
+        <div className="app-container grid grid-cols-1 gap-12 md:grid-cols-2 items-start">
           <div>
-            <h1 className="mb-6 text-5xl font-bold leading-tight tracking-tight text-gray-900 md:text-6xl">
-              Ace Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-purple-800">Placement</span>
-            </h1>
-            <p className="mb-10 max-w-xl text-xl leading-relaxed text-gray-600">
-              Practice, assess, and prepare for your dream job with our comprehensive placement readiness platform. Get expert-level preparation tools at your fingertips.
+            <h2 className="text-4xl md:text-5xl font-extrabold leading-tight">
+              Ace Your <span className="text-purple-600">Placement</span>
+            </h2>
+
+            <p className="mt-6 text-lg text-gray-600 max-w-xl">
+              Practice, assess, and prepare for your dream job with a focused placement readiness platform designed for professionals.
             </p>
 
-            <div className="mb-12 flex flex-col gap-4 sm:flex-row">
+            <div className="mt-8 flex flex-col sm:flex-row gap-4">
               <button
                 onClick={handleGetStarted}
-                className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 px-8 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:from-purple-700 hover:to-purple-800 hover:shadow-xl"
+                className="btn btn-primary px-6 py-3"
               >
                 Get Started
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-4 h-4 ml-2" />
               </button>
+
               <button
-                onClick={() => document.getElementById('features').scrollIntoView({ behavior: 'smooth' })}
-                className="rounded-lg border-2 border-gray-300 px-8 py-4 font-semibold text-gray-900 transition-all duration-300 hover:border-purple-600 hover:text-purple-600"
+                onClick={() => document.getElementById('features')?.scrollIntoView()}
+                className="btn border border-gray-300 bg-white text-gray-800 px-6 py-3"
               >
                 Learn More
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-6 sm:max-w-lg">
+            <div className="mt-10 grid grid-cols-3 gap-6 max-w-md">
               <div>
-                <p className="text-3xl font-bold text-gray-900">10K+</p>
-                <p className="text-gray-600">Students Prepared</p>
+                <p className="text-2xl font-bold">10K+</p>
+                <p className="text-sm text-gray-600">Students Prepared</p>
               </div>
               <div>
-                <p className="text-3xl font-bold text-gray-900">95%</p>
-                <p className="text-gray-600">Success Rate</p>
+                <p className="text-2xl font-bold">95%</p>
+                <p className="text-sm text-gray-600">Success Rate</p>
               </div>
               <div>
-                <p className="text-3xl font-bold text-gray-900">500+</p>
-                <p className="text-gray-600">Problems</p>
+                <p className="text-2xl font-bold">500+</p>
+                <p className="text-sm text-gray-600">Problems</p>
               </div>
             </div>
           </div>
 
-          {/* Hero Image Placeholder */}
-          <div className="relative md:pl-6">
-            <div className="absolute inset-0 rotate-2 rounded-3xl bg-gradient-to-r from-purple-200 to-purple-100"></div>
-            <div className="relative rounded-3xl bg-gradient-to-br from-purple-600 to-purple-800 p-7 text-white shadow-2xl sm:p-8">
-              <div className="space-y-5">
-                <div className="flex items-center gap-4 rounded-xl bg-white/10 p-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500">
-                    <BookOpen className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-semibold">500+ Problems</p>
-                    <p className="text-sm text-purple-200">Fully solved</p>
-                  </div>
+          {/* Right-side summary cards */}
+          <div className="space-y-4">
+            <div className="bg-white border border-gray-100 rounded-lg p-5">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-purple-600 rounded-md flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-white" />
                 </div>
-                <div className="flex items-center gap-4 rounded-xl bg-white/10 p-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500">
-                    <Video className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-semibold">200+ Interviews</p>
-                    <p className="text-sm text-purple-200">Mock practice</p>
-                  </div>
+                <div>
+                  <p className="text-sm font-semibold">500+ Problems</p>
+                  <p className="text-xs text-gray-500">Fully solved</p>
                 </div>
-                <div className="flex items-center gap-4 rounded-xl bg-white/10 p-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500">
-                    <TrendingUp className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-semibold">Real Analytics</p>
-                    <p className="text-sm text-purple-200">Track progress</p>
-                  </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-100 rounded-lg p-5">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-purple-600 rounded-md flex items-center justify-center">
+                  <Video className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">200+ Interviews</p>
+                  <p className="text-xs text-gray-500">Mock practice</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-100 rounded-lg p-5">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-purple-600 rounded-md flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Real Analytics</p>
+                  <p className="text-xs text-gray-500">Track progress</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </header>
 
       {/* Features Section */}
-      <section id="features" className="bg-gray-100/70 py-20">
-        <div className="mx-auto w-full max-w-7xl px-5 md:px-8">
-          <div className="mb-14 text-center">
-            <h2 className="mb-4 text-4xl font-bold tracking-tight text-gray-900 md:text-5xl">
-              Why Choose PlacementPrep?
-            </h2>
-            <p className="text-xl text-gray-600">
-              Everything you need to land your dream job
-            </p>
+      <section id="features" className="py-16 bg-white">
+        <div className="app-container">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <h3 className="text-3xl font-semibold">Why Choose PlacementPrep?</h3>
+            <p className="mt-3 text-gray-600">Everything you need to land your dream job</p>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-3">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
                 <div
                   key={index}
-                  className="h-full rounded-2xl border border-gray-100 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  className="bg-white border border-gray-100 rounded-lg p-6"
                 >
-                  <div className="w-14 h-14 bg-gradient-to-br from-purple-100 to-purple-50 rounded-lg flex items-center justify-center mb-6">
-                    <Icon className="w-7 h-7 text-purple-600" />
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-purple-50 rounded-md flex items-center justify-center">
+                      <Icon className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold">{feature.title}</h4>
+                    </div>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                  <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                  <p className="text-sm text-gray-600">{feature.description}</p>
                 </div>
               );
             })}
@@ -166,45 +176,44 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="mx-auto w-full max-w-7xl px-5 py-20 md:px-8">
-        <div className="grid items-center gap-12 md:grid-cols-2">
+      {/* Benefits & Stats */}
+      <section className="py-16">
+        <div className="app-container grid gap-10 md:grid-cols-2 items-start">
           <div>
-            <h2 className="mb-8 text-4xl font-bold tracking-tight text-gray-900">
-              Everything You Need to Succeed
-            </h2>
+            <h4 className="text-2xl font-semibold mb-4">Everything You Need to Succeed</h4>
             <ul className="space-y-4">
               {benefits.map((benefit, index) => (
-                <li key={index} className="flex items-center gap-4">
-                  <div className="w-6 h-6 bg-gradient-to-r from-purple-600 to-purple-700 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Check className="w-4 h-4 text-white" />
+                <li key={index} className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center mt-1">
+                    <Check className="w-3 h-3 text-white" />
                   </div>
-                  <span className="text-lg text-gray-700">{benefit}</span>
+                  <div className="text-sm text-gray-700">{benefit}</div>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 p-8 md:p-12">
-            <div className="rounded-xl bg-white p-6 shadow-lg">
-              <p className="text-gray-600 mb-4">
-                Join thousands of students who have successfully landed placements at top companies.
+          <div>
+            <div className="bg-white border border-gray-100 rounded-lg p-6">
+              <p className="text-sm text-gray-600 mb-4">
+                Join thousands of learners who have successfully landed placements at top companies.
               </p>
+
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-purple-50 rounded-lg p-4">
-                  <p className="text-2xl font-bold text-purple-600">95%</p>
+                <div className="bg-purple-50 rounded-md p-4">
+                  <p className="text-2xl font-semibold text-purple-600">95%</p>
                   <p className="text-sm text-gray-600">Pass Rate</p>
                 </div>
-                <div className="bg-purple-50 rounded-lg p-4">
-                  <p className="text-2xl font-bold text-purple-600">10K+</p>
+                <div className="bg-purple-50 rounded-md p-4">
+                  <p className="text-2xl font-semibold text-purple-600">10K+</p>
                   <p className="text-sm text-gray-600">Students</p>
                 </div>
-                <div className="bg-purple-50 rounded-lg p-4">
-                  <p className="text-2xl font-bold text-purple-600">500+</p>
+                <div className="bg-purple-50 rounded-md p-4">
+                  <p className="text-2xl font-semibold text-purple-600">500+</p>
                   <p className="text-sm text-gray-600">Problems</p>
                 </div>
-                <div className="bg-purple-50 rounded-lg p-4">
-                  <p className="text-2xl font-bold text-purple-600">24/7</p>
+                <div className="bg-purple-50 rounded-md p-4">
+                  <p className="text-2xl font-semibold text-purple-600">24/7</p>
                   <p className="text-sm text-gray-600">Support</p>
                 </div>
               </div>
@@ -214,62 +223,69 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-gradient-to-r from-purple-600 to-purple-800 py-16">
-        <div className="mx-auto w-full max-w-7xl px-5 text-center md:px-8">
-          <h2 className="mb-6 text-4xl font-bold tracking-tight text-white">
-            Ready to Ace Your Placement?
-          </h2>
-          <p className="text-xl text-purple-100 mb-8">
-            Start your preparation journey today and get one step closer to your dream job.
-          </p>
-          <button
-            onClick={handleGetStarted}
-            className="rounded-lg bg-white px-10 py-4 font-semibold text-purple-600 shadow-lg transition-colors duration-300 hover:bg-gray-50 hover:shadow-xl"
-          >
-            Get Started Now
-          </button>
+      <section className="py-12">
+        <div className="app-container">
+          <div className="bg-purple-600 rounded-lg p-8 text-center text-white">
+            <h4 className="text-2xl font-semibold">Ready to Ace Your Placement?</h4>
+            <p className="mt-2 text-sm text-purple-100 max-w-2xl mx-auto">
+              Start your preparation journey today and get one step closer to your dream job.
+            </p>
+
+            <div className="mt-6">
+              <button
+                onClick={handleGetStarted}
+                className="btn bg-white text-purple-600 px-6 py-3 font-semibold rounded-md"
+              >
+                Get Started Now
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 py-12 text-gray-400">
-        <div className="mx-auto w-full max-w-7xl px-5 md:px-8">
-          <div className="mb-8 grid gap-8 md:grid-cols-4">
+      <footer className="bg-white border-t border-gray-200">
+        <div className="app-container py-10">
+          <div className="grid gap-8 md:grid-cols-4">
             <div>
-              <h3 className="text-white font-semibold mb-4">Product</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="hover:text-white transition">Features</a></li>
-                <li><a href="#" className="hover:text-white transition">Pricing</a></li>
-                <li><a href="#" className="hover:text-white transition">Security</a></li>
+              <h5 className="text-sm font-semibold mb-4">Product</h5>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li><a href="#">Features</a></li>
+                <li><a href="#">Pricing</a></li>
+                <li><a href="#">Security</a></li>
               </ul>
             </div>
+
             <div>
-              <h3 className="text-white font-semibold mb-4">Company</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="hover:text-white transition">About</a></li>
-                <li><a href="#" className="hover:text-white transition">Blog</a></li>
-                <li><a href="#" className="hover:text-white transition">Careers</a></li>
+              <h5 className="text-sm font-semibold mb-4">Company</h5>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li><a href="#">About</a></li>
+                <li><a href="#">Blog</a></li>
+                <li><a href="#">Careers</a></li>
               </ul>
             </div>
+
             <div>
-              <h3 className="text-white font-semibold mb-4">Resources</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="hover:text-white transition">Guide</a></li>
-                <li><a href="#" className="hover:text-white transition">Support</a></li>
-                <li><a href="#" className="hover:text-white transition">Community</a></li>
+              <h5 className="text-sm font-semibold mb-4">Resources</h5>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li><a href="#">Guide</a></li>
+                <li><a href="#">Support</a></li>
+                <li><a href="#">Community</a></li>
               </ul>
             </div>
+
             <div>
-              <h3 className="text-white font-semibold mb-4">Legal</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="hover:text-white transition">Privacy</a></li>
-                <li><a href="#" className="hover:text-white transition">Terms</a></li>
-                <li><a href="#" className="hover:text-white transition">Contact</a></li>
+              <h5 className="text-sm font-semibold mb-4">Legal</h5>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li><a href="#">Privacy</a></li>
+                <li><a href="#">Terms</a></li>
+                <li><a href="#">Contact</a></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 pt-8 text-center">
-            <p>&copy; 2026 PlacementPrep. All rights reserved.</p>
+
+          <div className="mt-8 text-center text-sm text-gray-500">
+            &copy; 2026 PlacementPrep. All rights reserved.
           </div>
         </div>
       </footer>

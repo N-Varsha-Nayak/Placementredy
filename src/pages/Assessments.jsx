@@ -1,4 +1,5 @@
-import { FileText, Zap, CheckCircle, Clock } from 'lucide-react';
+import { FileText, Zap, Clock } from 'lucide-react';
+import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '../components/ui/Card';
 
 export default function AssessmentsPage() {
   const assessments = [
@@ -8,43 +9,51 @@ export default function AssessmentsPage() {
   ];
 
   return (
-    <div className="max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Assessments</h1>
-        <p className="text-lg text-gray-600">Evaluate your readiness with comprehensive assessments</p>
+    <div className="app-container py-6">
+      <div className="mb-6">
+        <h1 className="text-4xl font-extrabold tracking-tight mb-2">Assessments</h1>
+        <p className="text-lg text-gray-600">Evaluate your readiness with comprehensive, timed assessments</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {assessments.map((assessment) => (
-          <div key={assessment.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-start justify-between mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-50 rounded-lg flex items-center justify-center">
-                <Zap className="w-6 h-6 text-blue-600" />
+          <Card key={assessment.id} className="hover:shadow-xl transition-shadow">
+            <CardHeader className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg flex items-center justify-center">
+                  <Zap className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <CardTitle className="!text-base">{assessment.title}</CardTitle>
+                  <div className="text-sm text-gray-500">{assessment.questions} questions • {assessment.duration}</div>
+                </div>
               </div>
-              <span className="text-xs font-semibold px-3 py-1 bg-green-100 text-green-700 rounded-full">
-                Available
-              </span>
-            </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-4">{assessment.title}</h3>
-            <div className="space-y-3 mb-6">
-              <div className="flex items-center gap-2 text-gray-600 text-sm">
-                <Clock className="w-4 h-4" />
-                <span>{assessment.duration}</span>
+              <div>
+                <span className="text-xs font-semibold px-3 py-1 bg-green-100 text-green-700 rounded-full">Available</span>
               </div>
-              <div className="flex items-center gap-2 text-gray-600 text-sm">
-                <FileText className="w-4 h-4" />
-                <span>{assessment.questions} Questions</span>
+            </CardHeader>
+
+            <CardContent>
+              <div className="mt-2">
+                <div className="flex items-center gap-3 text-sm text-gray-600 mb-3">
+                  <Clock className="w-4 h-4" />
+                  <span>{assessment.duration}</span>
+                </div>
+
+                <div className="inline-block">
+                  <span className={`text-xs font-semibold px-2 py-1 rounded ${assessment.difficulty === 'Hard' ? 'bg-red-100 text-red-700' : assessment.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                    {assessment.difficulty}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-gray-600 text-sm">
-                <span className="text-xs font-semibold px-2 py-1 bg-yellow-100 text-yellow-700 rounded">
-                  {assessment.difficulty}
-                </span>
+            </CardContent>
+
+            <CardFooter>
+              <div className="flex items-center gap-3">
+                <button className="btn btn-primary w-full">Start Assessment</button>
               </div>
-            </div>
-            <button className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors">
-              Start Assessment
-            </button>
-          </div>
+            </CardFooter>
+          </Card>
         ))}
       </div>
     </div>

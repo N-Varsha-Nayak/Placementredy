@@ -1,3 +1,4 @@
+// src/pages/DashboardLayout.jsx
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Code2, FileText, BookMarked, User, Menu, LogOut, BookOpen } from 'lucide-react';
 import { useState } from 'react';
@@ -32,27 +33,33 @@ export default function DashboardLayout() {
   const currentPageTitle = pageTitleMap[location.pathname] ?? 'Placement Prep';
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <aside
-        className={`${
-          sidebarOpen ? 'w-64' : 'w-20'
-        } fixed left-0 top-0 z-40 h-full overflow-y-auto bg-gradient-to-b from-gray-900 to-gray-800 text-white transition-all duration-300 ease-in-out`}
+        className={`${sidebarOpen ? 'w-64' : 'w-20'} fixed left-0 top-0 z-40 h-full bg-gray-900 text-white`}
       >
         {/* Sidebar Header */}
-        <div className="sticky top-0 border-b border-gray-700 bg-gray-900 p-5">
+        <div className="sticky top-0 bg-gray-900 border-b border-gray-800 px-4 py-4">
           <div className="flex items-center justify-between">
-            {sidebarOpen && (
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-white" />
+            {sidebarOpen ? (
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-purple-600 rounded-md flex items-center justify-center">
+                  <BookOpen className="w-4 h-4 text-white" />
                 </div>
-                <h1 className="text-lg font-bold tracking-tight">PlacementPrep</h1>
+                <h1 className="text-sm font-semibold">PlacementPrep</h1>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center w-full">
+                <div className="w-8 h-8 bg-purple-600 rounded-md flex items-center justify-center">
+                  <BookOpen className="w-4 h-4 text-white" />
+                </div>
               </div>
             )}
+
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 rounded-md text-gray-300 hover:text-white"
+              aria-label="Toggle sidebar"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -60,7 +67,7 @@ export default function DashboardLayout() {
         </div>
 
         {/* Nav Items */}
-        <nav className="flex-1 space-y-2 p-4">
+        <nav className="px-2 py-4 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
@@ -68,13 +75,13 @@ export default function DashboardLayout() {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  active
-                    ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                className={`flex items-center w-full gap-3 px-3 py-3 rounded-md text-sm text-left ${
+                  active ? 'bg-purple-600 text-white' : 'text-gray-300 hover:bg-gray-800'
                 }`}
               >
-                <Icon className="w-5 h-5 flex-shrink-0" />
+                <div className="w-6 h-6 flex items-center justify-center">
+                  <Icon className="w-5 h-5" />
+                </div>
                 {sidebarOpen && <span className="font-medium">{item.label}</span>}
               </button>
             );
@@ -82,37 +89,40 @@ export default function DashboardLayout() {
         </nav>
 
         {/* Logout Button */}
-        <div className="p-4 border-t border-gray-700">
+        <div className="absolute bottom-4 left-0 right-0 px-4">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-4 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
+            className="flex items-center w-full gap-3 px-3 py-3 rounded-md text-sm text-gray-300 hover:bg-gray-800"
           >
-            <LogOut className="w-5 h-5 flex-shrink-0" />
+            <LogOut className="w-5 h-5" />
             {sidebarOpen && <span className="font-medium">Logout</span>}
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className={`${sidebarOpen ? 'ml-64' : 'ml-20'} flex min-h-screen flex-1 flex-col transition-all duration-300 ease-in-out`}>
+      <div className={`${sidebarOpen ? 'ml-64' : 'ml-20'} transition-all min-h-screen`}>
         {/* Header */}
-        <header className="sticky top-0 z-30 border-b border-gray-200 bg-white px-6 py-4 shadow-sm md:px-8">
-          <div className="flex items-center justify-between">
+        <header className="sticky top-0 bg-white border-b border-gray-200">
+          <div className="app-container flex items-center justify-between py-4">
             <div>
-              <p className="text-sm font-medium text-gray-500">Placement Prep</p>
-              <h2 className="text-2xl font-bold tracking-tight text-gray-900">{currentPageTitle}</h2>
+              <p className="text-xs text-gray-500">Placement Prep</p>
+              <h2 className="text-lg font-semibold text-gray-900">{currentPageTitle}</h2>
             </div>
+
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center cursor-pointer hover:shadow-lg transition-shadow">
-                <span className="text-white font-semibold text-sm">U</span>
+              <div className="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center text-sm text-gray-700">
+                U
               </div>
             </div>
           </div>
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 overflow-auto p-6 md:p-8">
-          <Outlet />
+        <main className="p-6">
+          <div className="app-container">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

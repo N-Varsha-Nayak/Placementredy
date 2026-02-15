@@ -1,111 +1,150 @@
-import { TrendingUp, Code2, Video, Award } from 'lucide-react';
+import React from 'react';
+import { Code2, Video, TrendingUp, Award } from 'lucide-react';
+import {
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  ResponsiveContainer,
+} from 'recharts';
+import CircularProgress from '../components/CircularProgress';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '../components/ui/Card';
+
+const radarData = [
+  { subject: 'DSA', A: 75 },
+  { subject: 'System Design', A: 60 },
+  { subject: 'Communication', A: 80 },
+  { subject: 'Resume', A: 85 },
+  { subject: 'Aptitude', A: 70 },
+];
+
+function ContinuePracticeCard() {
+  return (
+    <Card className="shadow-md">
+      <CardHeader>
+        <CardTitle>Continue Practice</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="mb-3">
+          <p className="font-semibold text-gray-900">Dynamic Programming</p>
+          <p className="text-sm text-gray-600">3 of 10 problems completed</p>
+        </div>
+
+        <div className="w-full bg-gray-100 rounded-full h-3 mb-4">
+          <div className="bg-gradient-to-r from-purple-600 to-purple-700 h-3 rounded-full" style={{ width: '30%' }} />
+        </div>
+
+        <div className="flex justify-end">
+          <button className="btn-primary">Continue</button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function WeeklyGoalsCard() {
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const active = [true, true, false, true, true, false, false];
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Weekly Goals</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-gray-600 mb-3">Problems Solved: <span className="font-semibold text-gray-900">12/20</span> this week</p>
+        <div className="w-full bg-gray-100 rounded-full h-3 mb-4">
+          <div className="bg-gradient-to-r from-purple-600 to-purple-700 h-3 rounded-full" style={{ width: '60%' }} />
+        </div>
+
+        <div className="flex items-center gap-3">
+          {days.map((d, i) => (
+            <div key={d} className="flex flex-col items-center text-center">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${active[i] ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                <span className="text-xs font-semibold">{d.slice(0,1)}</span>
+              </div>
+              <div className="text-xs text-gray-500 mt-1">{d}</div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function UpcomingAssessmentsCard() {
+  const items = [
+    { title: 'DSA Mock Test', time: 'Tomorrow, 10:00 AM' },
+    { title: 'System Design Review', time: 'Wed, 2:00 PM' },
+    { title: 'HR Interview Prep', time: 'Friday, 11:00 AM' },
+  ];
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Upcoming Assessments</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ul className="space-y-3">
+          {items.map((it) => (
+            <li key={it.title} className="flex items-start justify-between">
+              <div>
+                <p className="font-semibold text-gray-900">{it.title}</p>
+                <p className="text-sm text-gray-600">{it.time}</p>
+              </div>
+              <div className="text-sm text-gray-500">&gt;</div>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function DashboardPage() {
-  const stats = [
-    { label: 'Problems Solved', value: '0', icon: Code2, color: 'from-blue-500 to-blue-600' },
-    { label: 'Interviews Completed', value: '0', icon: Video, color: 'from-purple-500 to-purple-600' },
-    { label: 'Current Streak', value: '0 days', icon: TrendingUp, color: 'from-orange-500 to-orange-600' },
-    { label: 'Achievements', value: '0', icon: Award, color: 'from-green-500 to-green-600' },
-  ];
-
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8">
       <div>
         <h1 className="mb-2 text-4xl font-bold tracking-tight text-gray-900">Dashboard</h1>
-        <p className="text-lg text-gray-600">Welcome back! Here's your placement preparation overview</p>
+        <p className="text-lg text-gray-600">Personalized overview of your placement readiness</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat, i) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={i}
-              className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className={`bg-gradient-to-br ${stat.color} p-3 rounded-lg`}>
-                  <Icon className="w-6 h-6 text-white" />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+          <Card className="flex items-center justify-center">
+            <CardContent>
+              <div className="flex items-center gap-6 lg:gap-12">
+                <div>
+                  <CircularProgress value={72} />
                 </div>
-                <span className="text-sm text-gray-500">This month</span>
+                <div className="hidden md:block">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Overall Readiness</h3>
+                  <p className="text-sm text-gray-600">A holistic score based on practice, assessments, and activity</p>
+                </div>
               </div>
-              <p className="text-sm font-medium text-gray-600 mb-1">{stat.label}</p>
-              <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-            </div>
-          );
-        })}
-      </div>
+            </CardContent>
+          </Card>
 
-      {/* Main Content Grid */}
-      <div className="grid gap-8 lg:grid-cols-3">
-        {/* Recent Activity */}
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm lg:col-span-2">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Recent Activity</h2>
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center gap-4 rounded-lg border border-gray-100 p-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Code2 className="w-6 h-6 text-purple-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">Activity #{i}</p>
-                  <p className="text-sm text-gray-600">No activities yet. Start practicing to see your progress here!</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Skill Breakdown</CardTitle>
+            </CardHeader>
+            <CardContent style={{ height: 260 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="subject" />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} />
+                  <Radar name="You" dataKey="A" stroke="#6d28d9" fill="#7c3aed" fillOpacity={0.6} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Quick Links */}
-        <div className="rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 p-6 text-white shadow-lg">
-          <h2 className="text-xl font-bold mb-6">Quick Start</h2>
-          <div className="space-y-3">
-            <button className="w-full px-4 py-3 bg-white text-purple-600 font-semibold rounded-lg hover:bg-purple-50 transition-colors text-left flex items-center gap-2">
-              <Code2 className="w-5 h-5" />
-              Start Coding Challenge
-            </button>
-            <button className="w-full px-4 py-3 bg-purple-500 hover:bg-purple-400 text-white font-semibold rounded-lg transition-colors text-left flex items-center gap-2">
-              <Video className="w-5 h-5" />
-              Mock Interview
-            </button>
-            <button className="w-full px-4 py-3 bg-purple-500 hover:bg-purple-400 text-white font-semibold rounded-lg transition-colors text-left flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              View Analytics
-            </button>
-          </div>
-
-          {/* Progress */}
-          <div className="mt-8 pt-8 border-t border-purple-500">
-            <p className="text-sm text-purple-100 mb-3">Today's Progress</p>
-            <div className="w-full bg-purple-500 rounded-full h-2">
-              <div className="bg-white rounded-full h-2 w-0"></div>
-            </div>
-            <p className="text-sm text-purple-100 mt-2">0/10 tasks completed</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Learning Path */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Your Learning Path</h2>
-        <div className="grid gap-6 md:grid-cols-3">
-          {[
-            { title: 'Fundamentals', progress: 0, items: 15 },
-            { title: 'Intermediate', progress: 0, items: 20 },
-            { title: 'Advanced', progress: 0, items: 25 },
-          ].map((path, i) => (
-            <div key={i} className="rounded-lg border border-gray-200 p-4">
-              <p className="font-semibold text-gray-900 mb-2">{path.title}</p>
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                <div
-                  className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-full h-2 transition-all"
-                  style={{ width: `${path.progress}%` }}
-                ></div>
-              </div>
-              <p className="text-sm text-gray-600">{path.progress}% complete ({path.items} items)</p>
-            </div>
-          ))}
+        <div className="space-y-6">
+          <ContinuePracticeCard />
+          <WeeklyGoalsCard />
+          <UpcomingAssessmentsCard />
         </div>
       </div>
     </div>

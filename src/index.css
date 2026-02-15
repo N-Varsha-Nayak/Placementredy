@@ -1,21 +1,62 @@
 @import "tailwindcss";
 
+/* Global reset and neutral background for a clean, professional canvas */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+:root {
+  --bg: #f7f8fb;
+  --surface: #ffffff;
+  --muted: #6b7280;
+  --text: #0f172a;
+  --accent-500: #6d28d9;
+  --accent-600: #5b21b6;
 }
 
-#root {
-  width: 100%;
-  height: 100%;
+body {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--text);
+  background-color: var(--bg);
+  line-height: 1.55;
 }
+
+/* Layout container used across pages */
+.app-container {
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+h1, h2, h3, h4 {
+  color: var(--text);
+}
+
+/* Buttons baseline */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .5rem .9rem;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: linear-gradient(90deg,var(--accent-500),var(--accent-600));
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(109,40,217,0.12);
+  border: none;
+}
+
+.card { background: var(--surface); border-radius: 12px; }
+
+#root { width: 100%; height: 100%; }
 
