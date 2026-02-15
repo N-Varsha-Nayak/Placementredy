@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BookMarked, ArrowRight } from 'lucide-react';
 import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '../components/ui/Card';
-import { extractSkills, generateChecklist, generatePlan, generateQuestions, computeReadiness, saveHistory, getHistory, makeId, getHistoryItem } from '../utils/analyzer';
+import { extractSkills, generateChecklist, generatePlan, generateQuestions, computeReadiness, saveHistory, getHistory, makeId, getHistoryItem, updateHistoryEntry } from '../utils/analyzer';
 
 export default function ResourcesPage() {
   const [tab, setTab] = useState('analyze'); // analyze | history | results
@@ -22,6 +22,10 @@ export default function ResourcesPage() {
     const plan = generatePlan(skills);
     const questions = generateQuestions(skills);
     const readinessScore = computeReadiness(skills, company, role, jdText);
+    // flatten skills and initialize confidence map (default: 'practice')
+    const allSkills = Object.values(skills).flat();
+    const skillConfidenceMap = {};
+    allSkills.forEach((s) => { skillConfidenceMap[s] = 'practice'; });
 
     const entry = {
       id: makeId(),
@@ -34,7 +38,10 @@ export default function ResourcesPage() {
       checklist,
       questions,
       readinessScore,
+      skillConfidenceMap,
     };
+
+    entry.lastComputedScore = computeLiveScore(entry);
 
     saveHistory(entry);
     const updated = getHistory();
@@ -47,10 +54,100 @@ export default function ResourcesPage() {
   function openHistoryItem(id) {
     const item = getHistoryItem(id);
     if (item) {
-      setResult(item);
+      // ensure skillConfidenceMap exists
+      const allSkills = Object.values(item.extractedSkills || {}).flat();
+      item.skillConfidenceMap = item.skillConfidenceMap || {};
+      allSkills.forEach((s) => { if (!item.skillConfidenceMap[s]) item.skillConfidenceMap[s] = 'practice'; });
+      item.lastComputedScore = computeLiveScore(item);
+      setResult({ ...item });
       setSelectedId(id);
       setTab('results');
     }
+  }
+
+  function getAllSkillsFromResult(res) {
+    return Object.values(res.extractedSkills || {}).flat();
+  }
+
+  function computeLiveScore(res) {
+    if (!res) return 0;
+    const base = res.readinessScore || 0;
+    const map = res.skillConfidenceMap || {};
+    let adj = 0;
+    Object.keys(map).forEach((skill) => {
+      if (map[skill] === 'know') adj += 2;
+      else if (map[skill] === 'practice') adj -= 2;
+    });
+    const val = Math.max(0, Math.min(100, base + adj));
+    return val;
+  }
+
+  async function updateSkillConfidence(skill, value) {
+    if (!result) return;
+    const updated = { ...result, skillConfidenceMap: { ...(result.skillConfidenceMap || {}) } };
+    updated.skillConfidenceMap[skill] = value;
+    // recompute readiness
+    // Note: store the live-adjusted score separately for display, but persist the base readinessScore unchanged. We'll also store lastComputedScore
+    updated.lastComputedScore = computeLiveScore(updated);
+    // persist
+    updateHistoryEntry(updated);
+    setHistory(getHistory());
+    setResult(updated);
+  }
+
+  function exportPlainPlan(res) {
+    const lines = [];
+    lines.push(`7-Day Plan for ${res.role || ''} @ ${res.company || ''}`);
+    lines.push('');
+    res.plan.forEach((d) => {
+      lines.push(`Day ${d.day}: ${d.title}`);
+      d.tasks.forEach((t) => lines.push(` - ${t}`));
+      lines.push('');
+    });
+    return lines.join('\n');
+  }
+
+  function exportChecklist(res) {
+    const lines = [];
+    lines.push(`Preparation Checklist for ${res.role || ''} @ ${res.company || ''}`);
+    lines.push('');
+    res.checklist.forEach((r) => {
+      lines.push(r.name);
+      r.items.forEach((it) => lines.push(` - ${it}`));
+      lines.push('');
+    });
+    return lines.join('\n');
+  }
+
+  function exportQuestions(res) {
+    const lines = [];
+    lines.push(`Top Interview Questions for ${res.role || ''} @ ${res.company || ''}`);
+    lines.push('');
+    res.questions.forEach((q, i) => lines.push(`${i + 1}. ${q}`));
+    return lines.join('\n');
+  }
+
+  function downloadTXT(res) {
+    const chunks = [];
+    chunks.push(exportPlainPlan(res));
+    chunks.push('\n-- Checklist --\n');
+    chunks.push(exportChecklist(res));
+    chunks.push('\n-- Questions --\n');
+    chunks.push(exportQuestions(res));
+    const blob = new Blob(chunks, { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(res.company || 'analysis')}-${(res.role || 'results')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  async function copyToClipboard(text) {
+    try { await navigator.clipboard.writeText(text); }
+    catch (e) { console.warn('Clipboard copy failed', e); }
   }
 
   return (
@@ -134,7 +231,7 @@ export default function ResourcesPage() {
                         <div className="text-xs text-gray-500">{new Date(h.createdAt).toLocaleString()}</div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="text-sm font-semibold text-gray-700">{h.readinessScore}</div>
+                        <div className="text-sm font-semibold text-gray-700">{h.lastComputedScore ?? h.readinessScore}</div>
                         <button onClick={() => openHistoryItem(h.id)} className="px-3 py-1 border border-gray-200 rounded-md text-sm">View</button>
                       </div>
                     </li>
@@ -163,7 +260,7 @@ export default function ResourcesPage() {
                         <div className="text-xs text-gray-500">{new Date(h.createdAt).toLocaleString()}</div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="text-sm font-semibold">{h.readinessScore}</div>
+                        <div className="text-sm font-semibold">{h.lastComputedScore ?? h.readinessScore}</div>
                         <button onClick={() => openHistoryItem(h.id)} className="px-3 py-1 border border-gray-200 rounded-md text-sm">Open</button>
                       </div>
                     </li>
@@ -187,6 +284,7 @@ export default function ResourcesPage() {
       )}
 
       {tab === 'results' && result && (
+        <>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <Card>
@@ -207,9 +305,28 @@ export default function ResourcesPage() {
                       <div key={cat}>
                         <div className="text-xs text-gray-500 uppercase mb-1">{cat}</div>
                         <div className="flex flex-wrap gap-2">
-                          {(result.extractedSkills[cat] || []).map((s) => (
-                            <span key={s} className="text-xs px-2 py-1 bg-gray-100 rounded-md">{s}</span>
-                          ))}
+                          {(result.extractedSkills[cat] || []).map((s) => {
+                            const current = (result.skillConfidenceMap && result.skillConfidenceMap[s]) || 'practice';
+                            return (
+                              <div key={s} className="flex items-center gap-2">
+                                <div className="text-xs px-2 py-1 bg-gray-100 rounded-md">{s}</div>
+                                <div className="flex items-center rounded-md overflow-hidden border border-gray-200">
+                                  <button
+                                    onClick={() => updateSkillConfidence(s, 'know')}
+                                    className={`px-2 py-1 text-xs ${current === 'know' ? 'bg-purple-600 text-white' : 'bg-white text-gray-700'}`}
+                                  >
+                                    I know
+                                  </button>
+                                  <button
+                                    onClick={() => updateSkillConfidence(s, 'practice')}
+                                    className={`px-2 py-1 text-xs ${current === 'practice' ? 'bg-gray-200 text-gray-800' : 'bg-white text-gray-700'}`}
+                                  >
+                                    Need practice
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
@@ -265,18 +382,55 @@ export default function ResourcesPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-gray-900">{result.readinessScore}</div>
-                  <div className="text-sm text-gray-500">Readiness Score</div>
+                  <div className="text-4xl font-bold text-gray-900">{result.lastComputedScore ?? computeLiveScore(result)}</div>
+                  <div className="text-sm text-gray-500">Readiness Score (live)</div>
                 </div>
 
-                <div className="mt-4">
+                <div className="mt-4 space-y-3">
                   <h5 className="text-sm font-medium mb-2">Job Description</h5>
                   <div className="text-sm text-gray-700 whitespace-pre-wrap max-h-40 overflow-auto p-2 bg-gray-50 rounded-md">{result.jdText}</div>
+
+                  <div className="mt-3 flex flex-col gap-2">
+                    <button onClick={() => copyToClipboard(exportPlainPlan(result))} className="px-3 py-2 rounded-md border border-gray-200 text-sm">Copy 7-day plan</button>
+                    <button onClick={() => copyToClipboard(exportChecklist(result))} className="px-3 py-2 rounded-md border border-gray-200 text-sm">Copy round checklist</button>
+                    <button onClick={() => copyToClipboard(exportQuestions(result))} className="px-3 py-2 rounded-md border border-gray-200 text-sm">Copy 10 questions</button>
+                    <button onClick={() => downloadTXT(result)} className="px-3 py-2 rounded-md bg-gray-900 text-white text-sm">Download as TXT</button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
+
+        {/* Action Next box - bottom of results */}
+        <div className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Action Next</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div>
+                <p className="text-sm text-gray-600 mb-3">Top weak skills (marking for practice)</p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {(() => {
+                    const map = result.skillConfidenceMap || {};
+                    const weak = Object.keys(map).filter(k => map[k] === 'practice').slice(0,3);
+                    if (weak.length === 0) return <div className="text-sm text-gray-600">None — great!</div>;
+                    return weak.map(s => <span key={s} className="px-2 py-1 bg-gray-100 rounded-md text-sm">{s}</span>);
+                  })()}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-700">Suggested next action:</div>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => { const day1 = result.plan?.find(p=>p.day===1); if(day1) { copyToClipboard(`Day 1: ${day1.title}\n${day1.tasks.join('\n')}`); alert('Day 1 plan copied to clipboard'); } }} className="px-4 py-2 bg-purple-600 text-white rounded-md">Start Day 1 plan now</button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        </>
       )}
     </div>
   );

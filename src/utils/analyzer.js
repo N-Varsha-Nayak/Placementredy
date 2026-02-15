@@ -196,3 +196,12 @@ export function getHistoryItem(id) {
 export function makeId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2,9)}`;
 }
+
+export function updateHistoryEntry(updated) {
+  const list = getHistory();
+  const idx = list.findIndex((i) => i.id === updated.id);
+  if (idx === -1) return false;
+  list[idx] = updated;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  return true;
+}
