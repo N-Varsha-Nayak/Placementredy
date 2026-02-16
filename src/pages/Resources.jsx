@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BookMarked, ArrowRight } from 'lucide-react';
 import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '../components/ui/Card';
-import { extractSkills, generateChecklist, generatePlan, generateQuestions, computeReadiness, saveHistory, getHistory, makeId, getHistoryItem, updateHistoryEntry, generateCompanyIntel, generateRoundMapping } from '../utils/analyzer';
+import { extractSkills, generateChecklist, generatePlan, generateQuestions, computeReadiness, saveHistory, getHistory, makeId, getHistoryItem, updateHistoryEntry, generateCompanyIntel, generateRoundMapping, loadHistorySafe } from '../utils/analyzer';
 
 export default function ResourcesPage() {
   const [tab, setTab] = useState('analyze'); // analyze | history | results
@@ -9,19 +9,46 @@ export default function ResourcesPage() {
   const [role, setRole] = useState('');
   const [jdText, setJdText] = useState('');
   const [history, setHistory] = useState([]);
+  const [historyLoadSkipped, setHistoryLoadSkipped] = useState(0);
   const [selectedId, setSelectedId] = useState(null);
   const [result, setResult] = useState(null);
+  const [jdError, setJdError] = useState('');
+  const [jdWarning, setJdWarning] = useState('');
 
   useEffect(() => {
-    setHistory(getHistory());
+    const { list, skipped } = loadHistorySafe();
+    setHistory(list);
+    setHistoryLoadSkipped(skipped || 0);
   }, []);
 
+  // live-validate JD length so the calm warning shows as user types or when sample is loaded
+  useEffect(() => {
+    const text = (jdText || '').trim();
+    if (!text) {
+      setJdWarning('');
+      // don't clear jdError here; jdError is set on Analyze attempts
+      return;
+    }
+    if (text.length < 200) setJdWarning('This JD is too short to analyze deeply. Paste full JD for better output.');
+    else setJdWarning('');
+  }, [jdText]);
+
   function handleAnalyze() {
+    // validation: JD required
+    if (!(jdText || '').trim()) {
+      setJdError('Job description is required to analyze.');
+      return;
+    }
+    setJdError('');
+    // warning if JD is short
+    if ((jdText || '').trim().length < 200) setJdWarning('This JD is too short to analyze deeply. Paste full JD for better output.');
+    else setJdWarning('');
+
     const skills = extractSkills(jdText || '');
     const checklist = generateChecklist(skills);
-    const plan = generatePlan(skills);
+    const plan7Days = generatePlan(skills);
     const questions = generateQuestions(skills);
-    const readinessScore = computeReadiness(skills, company, role, jdText);
+    const baseScore = computeReadiness(skills, company, role, jdText);
     const companyIntel = generateCompanyIntel(company || '');
     const roundMapping = generateRoundMapping(skills, companyIntel);
     // flatten skills and initialize confidence map (default: 'practice')
@@ -36,16 +63,18 @@ export default function ResourcesPage() {
       role: role || '',
       jdText: jdText || '',
       extractedSkills: skills,
-      plan,
+      plan7Days,
       checklist,
       questions,
-      readinessScore,
+      baseScore,
       skillConfidenceMap,
       companyIntel,
       roundMapping,
     };
 
-    entry.lastComputedScore = computeLiveScore(entry);
+    // derive initial finalScore from baseScore + skill map
+    entry.finalScore = (function computeFinal(e){ const base = e.baseScore || 0; let adj = 0; Object.keys(e.skillConfidenceMap||{}).forEach(s=>{ if(e.skillConfidenceMap[s]==='know') adj+=2; else adj-=2; }); return Math.max(0, Math.min(100, base+adj)); })(entry);
+    entry.updatedAt = entry.createdAt;
 
     saveHistory(entry);
     const updated = getHistory();
@@ -70,8 +99,13 @@ export default function ResourcesPage() {
       const allSkills = Object.values(item.extractedSkills || {}).flat();
       item.skillConfidenceMap = item.skillConfidenceMap || {};
       allSkills.forEach((s) => { if (!item.skillConfidenceMap[s]) item.skillConfidenceMap[s] = 'practice'; });
-      item.lastComputedScore = computeLiveScore(item);
-      // persist any new intel/rounds
+      // compute finalScore from baseScore and map
+      const base = item.baseScore || item.readinessScore || 0;
+      let adj = 0;
+      Object.keys(item.skillConfidenceMap || {}).forEach((skill) => { if (item.skillConfidenceMap[skill] === 'know') adj += 2; else if (item.skillConfidenceMap[skill] === 'practice') adj -= 2; });
+      item.finalScore = Math.max(0, Math.min(100, base + adj));
+      item.updatedAt = item.updatedAt || item.createdAt;
+      // persist any new intel/rounds or defaults
       updateHistoryEntry(item);
       setResult({ ...item });
       setSelectedId(id);
@@ -85,7 +119,7 @@ export default function ResourcesPage() {
 
   function computeLiveScore(res) {
     if (!res) return 0;
-    const base = res.readinessScore || 0;
+    const base = res.baseScore || res.readinessScore || 0;
     const map = res.skillConfidenceMap || {};
     let adj = 0;
     Object.keys(map).forEach((skill) => {
@@ -100,22 +134,21 @@ export default function ResourcesPage() {
     if (!result) return;
     const updated = { ...result, skillConfidenceMap: { ...(result.skillConfidenceMap || {}) } };
     updated.skillConfidenceMap[skill] = value;
-    // recompute readiness
-    // Note: store the live-adjusted score separately for display, but persist the base readinessScore unchanged. We'll also store lastComputedScore
-    updated.lastComputedScore = computeLiveScore(updated);
-    // persist
+    // persist: updateHistoryEntry will recompute finalScore and updatedAt
     updateHistoryEntry(updated);
     setHistory(getHistory());
-    setResult(updated);
+    // refresh result from storage to ensure normalized shape
+    const refreshed = getHistoryItem(updated.id) || updated;
+    setResult(refreshed);
   }
 
   function exportPlainPlan(res) {
     const lines = [];
     lines.push(`7-Day Plan for ${res.role || ''} @ ${res.company || ''}`);
     lines.push('');
-    res.plan.forEach((d) => {
-      lines.push(`Day ${d.day}: ${d.title}`);
-      d.tasks.forEach((t) => lines.push(` - ${t}`));
+    (res.plan7Days || []).forEach((d) => {
+      lines.push(`Day ${d.day}: ${d.focus}`);
+      (d.tasks || []).forEach((t) => lines.push(` - ${t}`));
       lines.push('');
     });
     return lines.join('\n');
@@ -125,9 +158,9 @@ export default function ResourcesPage() {
     const lines = [];
     lines.push(`Preparation Checklist for ${res.role || ''} @ ${res.company || ''}`);
     lines.push('');
-    res.checklist.forEach((r) => {
-      lines.push(r.name);
-      r.items.forEach((it) => lines.push(` - ${it}`));
+    (res.checklist || []).forEach((r) => {
+      lines.push(r.roundTitle || r.name || '');
+      (r.items || []).forEach((it) => lines.push(` - ${it}`));
       lines.push('');
     });
     return lines.join('\n');
@@ -137,7 +170,7 @@ export default function ResourcesPage() {
     const lines = [];
     lines.push(`Top Interview Questions for ${res.role || ''} @ ${res.company || ''}`);
     lines.push('');
-    res.questions.forEach((q, i) => lines.push(`${i + 1}. ${q}`));
+    (res.questions || []).forEach((q, i) => lines.push(`${i + 1}. ${q}`));
     return lines.join('\n');
   }
 
@@ -170,6 +203,9 @@ export default function ResourcesPage() {
         <div>
           <h1 className="text-2xl font-semibold">Resources & Analysis</h1>
           <p className="text-sm text-gray-600">Analyze job descriptions, get tailored plans, and save your history locally.</p>
+          {historyLoadSkipped > 0 && (
+            <div className="mt-2 text-sm text-yellow-700">One saved entry couldn't be loaded. Create a new analysis.</div>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <button className={`px-3 py-2 rounded-md text-sm ${tab === 'analyze' ? 'bg-purple-600 text-white' : 'bg-white border border-gray-200'}`} onClick={() => setTab('analyze')}>Analyze</button>
@@ -189,11 +225,13 @@ export default function ResourcesPage() {
                   <input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Company (optional)" className="w-full border border-gray-200 rounded-md px-3 py-2" />
                   <input value={role} onChange={(e) => setRole(e.target.value)} placeholder="Role (optional)" className="w-full border border-gray-200 rounded-md px-3 py-2" />
                   <textarea value={jdText} onChange={(e) => setJdText(e.target.value)} rows={12} placeholder="Paste job description here..." className="w-full border border-gray-200 rounded-md p-3 font-mono text-sm" />
+                  {jdError && <div className="text-sm text-red-600 mt-2">{jdError}</div>}
+                  {!jdError && jdWarning && <div className="text-sm text-yellow-700 mt-2">{jdWarning}</div>}
                 </div>
               </CardContent>
               <CardFooter>
                 <div className="flex items-center justify-end gap-3">
-                  <button onClick={() => { setCompany(''); setRole(''); setJdText(''); }} className="px-4 py-2 border border-gray-200 rounded-md">Clear</button>
+                  <button onClick={() => { setCompany(''); setRole(''); setJdText(''); setJdError(''); setJdWarning(''); }} className="px-4 py-2 border border-gray-200 rounded-md">Clear</button>
                   <button onClick={handleAnalyze} className="px-4 py-2 rounded-md bg-purple-600 text-white">Analyze</button>
                 </div>
               </CardFooter>
@@ -245,7 +283,7 @@ export default function ResourcesPage() {
                         <div className="text-xs text-gray-500">{new Date(h.createdAt).toLocaleString()}</div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="text-sm font-semibold text-gray-700">{h.lastComputedScore ?? h.readinessScore}</div>
+                        <div className="text-sm font-semibold text-gray-700">{h.finalScore ?? h.baseScore}</div>
                         <button onClick={() => openHistoryItem(h.id)} className="px-3 py-1 border border-gray-200 rounded-md text-sm">View</button>
                       </div>
                     </li>
@@ -274,7 +312,7 @@ export default function ResourcesPage() {
                         <div className="text-xs text-gray-500">{new Date(h.createdAt).toLocaleString()}</div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="text-sm font-semibold">{h.lastComputedScore ?? h.readinessScore}</div>
+                        <div className="text-sm font-semibold">{h.finalScore ?? h.baseScore}</div>
                         <button onClick={() => openHistoryItem(h.id)} className="px-3 py-1 border border-gray-200 rounded-md text-sm">Open</button>
                       </div>
                     </li>
@@ -350,11 +388,11 @@ export default function ResourcesPage() {
                 <section className="mb-6">
                   <h4 className="text-sm font-semibold mb-2">Preparation Checklist</h4>
                   <div className="space-y-4">
-                    {result.checklist.map((r) => (
-                      <div key={r.name}>
-                        <div className="text-sm font-medium mb-2">{r.name}</div>
+                    {(result.checklist || []).map((r) => (
+                      <div key={r.roundTitle}>
+                        <div className="text-sm font-medium mb-2">{r.roundTitle}</div>
                         <ul className="list-disc pl-5 text-sm text-gray-700">
-                          {r.items.map((it, idx) => <li key={idx}>{it}</li>)}
+                          {(r.items || []).map((it, idx) => <li key={idx}>{it}</li>)}
                         </ul>
                       </div>
                     ))}
@@ -364,10 +402,10 @@ export default function ResourcesPage() {
                 <section>
                   <h4 className="text-sm font-semibold mb-2">7-Day Plan</h4>
                   <div className="grid gap-3">
-                    {result.plan.map((d) => (
+                    {(result.plan7Days || []).map((d) => (
                       <div key={d.day} className="p-3 border border-gray-100 rounded-md">
-                        <div className="text-sm font-semibold">Day {d.day}: {d.title}</div>
-                        <div className="text-sm text-gray-700 mt-1">{d.tasks.join(' • ')}</div>
+                        <div className="text-sm font-semibold">Day {d.day}: {d.focus}</div>
+                        <div className="text-sm text-gray-700 mt-1">{(d.tasks || []).join(' • ')}</div>
                       </div>
                     ))}
                   </div>
@@ -382,7 +420,7 @@ export default function ResourcesPage() {
                 </CardHeader>
                 <CardContent>
                   <ol className="list-decimal pl-5 text-sm space-y-2">
-                    {result.questions.map((q, i) => <li key={i}>{q}</li>)}
+                    {(result.questions || []).map((q, i) => <li key={i}>{q}</li>)}
                   </ol>
                 </CardContent>
               </Card>
@@ -396,7 +434,7 @@ export default function ResourcesPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-gray-900">{result.lastComputedScore ?? computeLiveScore(result)}</div>
+                  <div className="text-4xl font-bold text-gray-900">{result.finalScore ?? computeLiveScore(result)}</div>
                   <div className="text-sm text-gray-500">Readiness Score (live)</div>
                 </div>
 
@@ -419,24 +457,24 @@ export default function ResourcesPage() {
                   <CardTitle>Company Intel & Round Mapping</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-sm text-gray-700 mb-3">
-                    <div className="font-medium">{result.companyIntel?.name || result.company || '—'}</div>
-                    <div className="text-xs text-gray-500">{result.companyIntel?.industry} • {result.companyIntel?.sizeCategory}</div>
-                    <div className="mt-2 text-sm">{result.companyIntel?.typicalHiringFocus}</div>
-                  </div>
+                    <div className="text-sm text-gray-700 mb-3">
+                      <div className="font-medium">{result.companyIntel?.name || result.company || '—'}</div>
+                      <div className="text-xs text-gray-500">{result.companyIntel?.industry} • {result.companyIntel?.sizeCategory}</div>
+                      <div className="mt-2 text-sm">{result.companyIntel?.typicalHiringFocus}</div>
+                    </div>
 
-                  <div>
-                    <div className="text-sm font-medium mb-2">Expected Interview Rounds</div>
-                    <ol className="list-decimal pl-5 text-sm space-y-2">
-                      {(result.roundMapping || []).map((r, idx) => (
-                        <li key={idx}>
-                          <div className="font-semibold">{r.name}</div>
-                          <div className="text-xs text-gray-600">{r.focus}</div>
-                          <div className="text-xs text-gray-500 mt-1">{r.why}</div>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
+                    <div>
+                      <div className="text-sm font-medium mb-2">Expected Interview Rounds</div>
+                      <ol className="list-decimal pl-5 text-sm space-y-2">
+                        {(result.roundMapping || []).map((r, idx) => (
+                          <li key={idx}>
+                            <div className="font-semibold">{r.roundTitle}</div>
+                            <div className="text-xs text-gray-600">{(r.focusAreas || []).join(', ')}</div>
+                            <div className="text-xs text-gray-500 mt-1">{r.whyItMatters}</div>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
                 </CardContent>
               </Card>
             </div>
@@ -463,8 +501,8 @@ export default function ResourcesPage() {
 
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-700">Suggested next action:</div>
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => { const day1 = result.plan?.find(p=>p.day===1); if(day1) { copyToClipboard(`Day 1: ${day1.title}\n${day1.tasks.join('\n')}`); alert('Day 1 plan copied to clipboard'); } }} className="px-4 py-2 bg-purple-600 text-white rounded-md">Start Day 1 plan now</button>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => { const day1 = (result.plan7Days || []).find(p=>p.day===1); if(day1) { copyToClipboard(`Day 1: ${day1.focus}\n${(day1.tasks||[]).join('\n')}`); alert('Day 1 plan copied to clipboard'); } }} className="px-4 py-2 bg-purple-600 text-white rounded-md">Start Day 1 plan now</button>
                   </div>
                 </div>
               </div>

@@ -1,12 +1,13 @@
 // Lightweight heuristic analyzer for JD text
 
 const CATEGORIES = {
-  core: ['DSA', 'OOP', 'DBMS', 'OS', 'Networks'],
+  coreCS: ['DSA', 'OOP', 'DBMS', 'OS', 'Networks'],
   languages: ['Java', 'Python', 'JavaScript', 'TypeScript', 'C', 'C++', 'C#', 'Go'],
   web: ['React', 'Next.js', 'Node.js', 'Express', 'REST', 'GraphQL'],
   data: ['SQL', 'MongoDB', 'PostgreSQL', 'MySQL', 'Redis'],
   cloud: ['AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes', 'CI/CD', 'Linux'],
   testing: ['Selenium', 'Cypress', 'Playwright', 'JUnit', 'PyTest'],
+  other: [],
 };
 
 function normalize(text = '') {
@@ -14,25 +15,33 @@ function normalize(text = '') {
 }
 
 export function extractSkills(jdText = '') {
-  const result = {};
   const normalized = normalize(jdText);
+  const result = {
+    coreCS: [],
+    languages: [],
+    web: [],
+    data: [],
+    cloud: [],
+    testing: [],
+    other: [],
+  };
 
   Object.keys(CATEGORIES).forEach((cat) => {
-    result[cat] = [];
+    // skip 'other' since it's default bucket
+    if (cat === 'other') return;
     CATEGORIES[cat].forEach((kw) => {
-      // normalize keyword to alphanumeric token for matching
       const token = kw.toLowerCase().replace(/[^a-z0-9]+/gi, ' ').trim();
       if (!token) return;
-      // check if any token word is present in normalized text
       const words = token.split(/\s+/);
       const found = words.some((w) => normalized.includes(w));
       if (found) result[cat].push(kw);
     });
   });
 
-  const any = Object.values(result).some((arr) => arr.length > 0);
+  const any = Object.keys(result).some((k) => (result[k] || []).length > 0);
   if (!any) {
-    result.general = ['General fresher stack'];
+    // default 'other' skills when nothing detected
+    result.other = ['Communication', 'Problem solving', 'Basic coding', 'Projects'];
   }
 
   return result;
@@ -43,85 +52,80 @@ function pickN(arr, n) {
 }
 
 export function generateChecklist(skillsByCat) {
-  // Template rounds with adaptive items
-  const rounds = [
-    { name: 'Round 1: Aptitude / Basics', items: [] },
-    { name: 'Round 2: DSA + Core CS', items: [] },
-    { name: 'Round 3: Tech interview (projects + stack)', items: [] },
-    { name: 'Round 4: Managerial / HR', items: [] },
-  ];
+  const core = skillsByCat.coreCS || [];
+  const stack = [].concat(skillsByCat.web || [], skillsByCat.languages || [], skillsByCat.data || [], skillsByCat.cloud || []);
+  const emptyDetection = (Object.keys(skillsByCat).every(k => (skillsByCat[k] || []).length === 0) || (skillsByCat.other && skillsByCat.other.length > 0 && stack.length === 0 && core.length === 0));
 
-  // Round 1 - basics
+  const rounds = [];
+
+  rounds.push({ roundTitle: 'Round 1: Aptitude / Basics', items: [] });
+  rounds.push({ roundTitle: 'Round 2: DSA & Core CS', items: [] });
+  rounds.push({ roundTitle: 'Round 3: Technical & Projects', items: [] });
+  rounds.push({ roundTitle: 'Round 4: HR / Behavioral', items: [] });
+
   rounds[0].items = [
     'Practice numerical and logical reasoning problems',
     'Brush up on basic math and time management',
     'Review core programming constructs (loops, arrays, strings)',
     'Solve 5 short coding puzzles under time limit',
-    'Read common aptitude question patterns',
   ];
 
-  // Round 2 - dsa/core
-  const coreSkills = skillsByCat.core || [];
   rounds[1].items = [
     'Revise arrays, strings, and linked lists',
     'Practice sorting and searching algorithms',
-    'Work on 10 medium DSA problems (recursion, DP)',
+    'Work on medium DSA problems (recursion, DP)',
     'Review OOP design and common patterns',
-    'Study DBMS fundamentals (normalization, joins)',
   ];
-  if (coreSkills.includes('OS')) rounds[1].items.push('Review process scheduling and memory management');
-  if (coreSkills.includes('Networks')) rounds[1].items.push('Review TCP/IP basics and HTTP');
+  if (core.includes('OS')) rounds[1].items.push('Review process scheduling and memory management');
+  if (core.includes('Networks')) rounds[1].items.push('Review TCP/IP basics and HTTP');
 
-  // Round 3 - tech/projects
-  const stack = [].concat(
-    skillsByCat.web || [],
-    skillsByCat.languages || [],
-    skillsByCat.data || [],
-    skillsByCat.cloud || []
-  );
-  const projectItems = [
-    'Prepare 2-3 project talking points (architecture, challenges)',
-    'Align resume bullets with the stack mentioned in JD',
-    'Be ready to explain system trade-offs and design decisions',
-    'Review framework-specific concepts for your stack',
-  ];
-  rounds[2].items = rounds[2].items = pickN(projectItems.concat(stack.map(s => `Revise ${s}`)), 6);
+  const projectItems = ['Prepare 2-3 project talking points (architecture, challenges)', 'Align resume bullets with the stack mentioned in JD', 'Be ready to explain system trade-offs and design decisions', 'Review framework-specific concepts for your stack'];
+  rounds[2].items = pickN(projectItems.concat(stack.map(s => `Revise ${s}`)), 6);
 
-  // Round 4 - HR
-  rounds[3].items = [
-    'Prepare STAR stories for behavioral questions',
-    'Have clear motivations and role expectations',
-    'Discuss strengths, weaknesses, and learnings',
-    'Prepare questions to ask the interviewer',
-    'Align career goals with company mission',
-  ];
+  rounds[3].items = ['Prepare STAR stories for behavioral questions', 'Have clear motivations and role expectations', 'Discuss strengths, weaknesses, and learnings', 'Prepare questions to ask the interviewer'];
+
+  if (emptyDetection) {
+    // If no concrete skills detected, adjust checklist to be soft-skills and basics focused
+    rounds[0].items = ['Brush up on communication and mock interviews', 'Practice problem solving with simple tasks', 'Review basic coding syntax and run small programs'];
+    rounds[1].items = ['Learn foundational algorithms and common patterns', 'Practice step-by-step problem breakdown'];
+    rounds[2].items = ['Prepare project summaries and learning stories', 'Practice simple end-to-end demos'];
+    rounds[3].items = ['Prepare behavioral stories and expectations'];
+  }
 
   return rounds;
 }
 
 export function generatePlan(skillsByCat) {
-  const plan = [
-    { day: 1, title: 'Basics & Foundation', tasks: ['Math fundamentals', 'Syntax review', 'Simple problems'] },
-    { day: 2, title: 'Core CS', tasks: ['Data structures review', 'Complexity analysis'] },
-    { day: 3, title: 'DSA Intensive', tasks: ['Array/Strings problems', 'Binary search, two pointers'] },
-    { day: 4, title: 'DSA Intensive', tasks: ['Trees & Graphs practice', 'Greedy & DP'] },
-    { day: 5, title: 'Project & Resume', tasks: ['Align resume with JD', 'Prepare project talking points'] },
-    { day: 6, title: 'Mock Interviews', tasks: ['Simulate interview', 'Review feedback'] },
-    { day: 7, title: 'Revision', tasks: ['Revise weak areas', 'Plan next steps'] },
+  const core = skillsByCat.coreCS || [];
+  const web = skillsByCat.web || [];
+  const data = skillsByCat.data || [];
+  const emptyDetection = (Object.keys(skillsByCat).every(k => (skillsByCat[k] || []).length === 0) || (skillsByCat.other && skillsByCat.other.length > 0 && web.length === 0 && core.length === 0));
+
+  const plan7Days = [
+    { day: 1, focus: 'Basics & Foundation', tasks: ['Math fundamentals', 'Syntax review', 'Simple problems'] },
+    { day: 2, focus: 'Core CS', tasks: ['Data structures review', 'Complexity analysis'] },
+    { day: 3, focus: 'DSA Intensive', tasks: ['Array/Strings problems', 'Binary search, two pointers'] },
+    { day: 4, focus: 'DSA Intensive', tasks: ['Trees & Graphs practice', 'Greedy & DP'] },
+    { day: 5, focus: 'Project & Resume', tasks: ['Align resume with JD', 'Prepare project talking points'] },
+    { day: 6, focus: 'Mock Interviews', tasks: ['Simulate interview', 'Review feedback'] },
+    { day: 7, focus: 'Revision', tasks: ['Revise weak areas', 'Plan next steps'] },
   ];
 
-  // adapt plan: if React present, add frontend revision day
-  const web = skillsByCat.web || [];
   if (web.length > 0) {
-    plan[4].tasks.unshift('Frontend concepts: React lifecycle & hooks');
+    plan7Days[4].tasks.unshift('Frontend concepts: React lifecycle & hooks');
   }
-
-  const data = skillsByCat.data || [];
   if (data.length > 0) {
-    plan[3].tasks.push('Practice SQL queries and joins');
+    plan7Days[3].tasks.push('Practice SQL queries and joins');
   }
 
-  return plan;
+  if (emptyDetection) {
+    plan7Days[0].tasks = ['Brush up on communication and mock interviews', 'Practice problem solving with simple tasks'];
+    plan7Days[1].tasks = ['Learn foundational algorithms and common patterns'];
+    plan7Days[2].tasks = ['Practice simple coding problems and walkthroughs'];
+    plan7Days[4].tasks = ['Prepare project summaries and learnings'];
+  }
+
+  return plan7Days;
 }
 
 export function generateQuestions(skillsByCat) {
@@ -202,41 +206,43 @@ export function generateCompanyIntel(companyName = '') {
 
 export function generateRoundMapping(skillsByCat, companyIntel) {
   const rounds = [];
-  const hasDSA = (skillsByCat.core || []).includes('DSA');
+  const hasDSA = (skillsByCat.coreCS || []).includes('DSA');
   const hasWeb = (skillsByCat.web || []).length > 0;
   const hasData = (skillsByCat.data || []).length > 0;
 
+  function pushRound(title, focusAreas, why) {
+    rounds.push({ roundTitle: title, focusAreas: Array.isArray(focusAreas) ? focusAreas : [focusAreas], whyItMatters: why });
+  }
+
   if (!companyIntel || companyIntel.sizeCategory === 'Enterprise') {
-    // enterprise flows
     if (hasDSA) {
-      rounds.push({ name: 'Round 1: Online Test', focus: 'DSA + Aptitude', why: 'Filters candidates at scale for core algorithmic ability.' });
-      rounds.push({ name: 'Round 2: Technical Interview', focus: 'DSA + Core CS', why: 'Deep assessment of algorithmic thinking and system fundamentals.' });
-      rounds.push({ name: 'Round 3: System / Project Interview', focus: 'Architecture & Stack', why: 'Evaluate system design and practical experience.' });
-      rounds.push({ name: 'Round 4: HR / Managerial', focus: 'Behavioral', why: 'Assess fit and communication.' });
+      pushRound('Round 1: Online Test', ['DSA', 'Aptitude'], 'Filters candidates at scale for core algorithmic ability.');
+      pushRound('Round 2: Technical Interview', ['DSA', 'Core CS'], 'Deep assessment of algorithmic thinking and system fundamentals.');
+      pushRound('Round 3: System / Project Interview', ['Architecture', 'Stack'], 'Evaluate system design and practical experience.');
+      pushRound('Round 4: HR / Managerial', ['Behavioral'], 'Assess fit and communication.');
     } else if (hasWeb) {
-      rounds.push({ name: 'Round 1: Coding Assignment', focus: 'Practical coding', why: 'Validate implementation skills and code quality.' });
-      rounds.push({ name: 'Round 2: Technical Interview', focus: 'Core CS + Stack', why: 'Assess depth in relevant technologies.' });
-      rounds.push({ name: 'Round 3: System + Integration', focus: 'APIs & Systems', why: 'Understand production-readiness and trade-offs.' });
-      rounds.push({ name: 'Round 4: HR', focus: 'Behavioral', why: 'Cultural fit and role expectations.' });
+      pushRound('Round 1: Coding Assignment', ['Practical coding'], 'Validate implementation skills and code quality.');
+      pushRound('Round 2: Technical Interview', ['Core CS', 'Stack'], 'Assess depth in relevant technologies.');
+      pushRound('Round 3: System + Integration', ['APIs', 'Systems'], 'Understand production-readiness and trade-offs.');
+      pushRound('Round 4: HR', ['Behavioral'], 'Cultural fit and role expectations.');
     } else {
-      rounds.push({ name: 'Round 1: Screening', focus: 'Aptitude', why: 'General screening for baseline skills.' });
-      rounds.push({ name: 'Round 2: Technical', focus: 'Core CS', why: 'Assess fundamentals relevant to the role.' });
-      rounds.push({ name: 'Round 3: HR', focus: 'Behavioral', why: 'Check alignment and communication.' });
+      pushRound('Round 1: Screening', ['Aptitude'], 'General screening for baseline skills.');
+      pushRound('Round 2: Technical', ['Core CS'], 'Assess fundamentals relevant to the role.');
+      pushRound('Round 3: HR', ['Behavioral'], 'Check alignment and communication.');
     }
   } else {
-    // startup / mid-size flows
     if (hasWeb) {
-      rounds.push({ name: 'Round 1: Practical Coding', focus: 'Build a small feature or task', why: 'Tests practical problem solving and speed.' });
-      rounds.push({ name: 'Round 2: System Discussion', focus: 'Design & Trade-offs', why: 'Assesses architectural thinking and ownership.' });
-      rounds.push({ name: 'Round 3: Culture Fit', focus: 'Team & Product', why: 'Evaluate adaptability and product sense.' });
+      pushRound('Round 1: Practical Coding', ['Build feature', 'Small tasks'], 'Tests practical problem solving and speed.');
+      pushRound('Round 2: System Discussion', ['Design', 'Trade-offs'], 'Assesses architectural thinking and ownership.');
+      pushRound('Round 3: Culture Fit', ['Team', 'Product'], 'Evaluate adaptability and product sense.');
     } else if (hasDSA) {
-      rounds.push({ name: 'Round 1: Coding Challenge', focus: 'DSA', why: 'Quick check for algorithmic ability.' });
-      rounds.push({ name: 'Round 2: Technical + Projects', focus: 'Core CS & Projects', why: 'Assess real-world application and problem solving.' });
-      rounds.push({ name: 'Round 3: HR', focus: 'Behavioral', why: 'Discuss fit and expectations.' });
+      pushRound('Round 1: Coding Challenge', ['DSA'], 'Quick check for algorithmic ability.');
+      pushRound('Round 2: Technical + Projects', ['Core CS', 'Projects'], 'Assess real-world application and problem solving.');
+      pushRound('Round 3: HR', ['Behavioral'], 'Discuss fit and expectations.');
     } else {
-      rounds.push({ name: 'Round 1: Practical Screening', focus: 'Aptitude & Basics', why: 'Baseline evaluation for quick hiring cycles.' });
-      rounds.push({ name: 'Round 2: Technical', focus: 'Role-specific skills', why: 'Ensure candidate can execute on required tasks.' });
-      rounds.push({ name: 'Round 3: HR', focus: 'Behavioral', why: 'Confirm fit.' });
+      pushRound('Round 1: Practical Screening', ['Aptitude', 'Basics'], 'Baseline evaluation for quick hiring cycles.');
+      pushRound('Round 2: Technical', ['Role-specific skills'], 'Ensure candidate can execute on required tasks.');
+      pushRound('Round 3: HR', ['Behavioral'], 'Confirm fit.');
     }
   }
 
@@ -247,13 +253,14 @@ export function generateRoundMapping(skillsByCat, companyIntel) {
 const STORAGE_KEY = 'placement_history_v1';
 
 export function saveHistory(entry) {
-  const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  list.unshift(entry);
+  const { list } = loadHistorySafe();
+  const ensured = ensureEntrySchema(entry, true);
+  list.unshift(ensured);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
 }
 
 export function getHistory() {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  return loadHistorySafe().list;
 }
 
 export function getHistoryItem(id) {
@@ -266,10 +273,91 @@ export function makeId() {
 }
 
 export function updateHistoryEntry(updated) {
-  const list = getHistory();
+  const { list, skipped } = loadHistorySafe();
   const idx = list.findIndex((i) => i.id === updated.id);
   if (idx === -1) return false;
-  list[idx] = updated;
+  const ensured = ensureEntrySchema(updated, false);
+  // preserve baseScore if present; ensure finalScore reflects skillConfidenceMap
+  const base = ensured.baseScore || 0;
+  const map = ensured.skillConfidenceMap || {};
+  let adj = 0;
+  Object.keys(map).forEach((skill) => {
+    if (map[skill] === 'know') adj += 2;
+    else if (map[skill] === 'practice') adj -= 2;
+  });
+  ensured.finalScore = Math.max(0, Math.min(100, base + adj));
+  ensured.updatedAt = new Date().toISOString();
+  list[idx] = ensured;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
   return true;
+}
+
+export function loadHistorySafe() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return { list: [], skipped: 0 };
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return { list: [], skipped: 1 };
+    const list = [];
+    let skipped = 0;
+    parsed.forEach((item) => {
+      if (!item || typeof item !== 'object' || !item.id) { skipped += 1; return; }
+      try {
+        const ensured = ensureEntrySchema(item, false);
+        list.push(ensured);
+      } catch (e) {
+        skipped += 1;
+      }
+    });
+    return { list, skipped };
+  } catch (e) {
+    // corrupted JSON - clear storage to avoid repeated errors
+    localStorage.removeItem(STORAGE_KEY);
+    return { list: [], skipped: 1 };
+  }
+}
+
+function ensureEntrySchema(entry = {}, isNew = false) {
+  const now = new Date().toISOString();
+  const e = Object.assign({}, entry);
+  e.id = e.id || makeId();
+  e.createdAt = e.createdAt || now;
+  e.company = typeof e.company === 'string' ? e.company : '';
+  e.role = typeof e.role === 'string' ? e.role : '';
+  e.jdText = typeof e.jdText === 'string' ? e.jdText : '';
+  e.extractedSkills = e.extractedSkills && typeof e.extractedSkills === 'object' ? e.extractedSkills : { coreCS: [], languages: [], web: [], data: [], cloud: [], testing: [], other: [] };
+  // normalize extractedSkills keys
+  e.extractedSkills.coreCS = e.extractedSkills.coreCS || e.extractedSkills.core || [];
+  e.extractedSkills.languages = e.extractedSkills.languages || [];
+  e.extractedSkills.web = e.extractedSkills.web || [];
+  e.extractedSkills.data = e.extractedSkills.data || [];
+  e.extractedSkills.cloud = e.extractedSkills.cloud || [];
+  e.extractedSkills.testing = e.extractedSkills.testing || [];
+  e.extractedSkills.other = e.extractedSkills.other || [];
+
+  e.roundMapping = Array.isArray(e.roundMapping) ? e.roundMapping.map(r => ({ roundTitle: r.roundTitle || r.name || '', focusAreas: r.focusAreas || (r.focus ? [r.focus] : []), whyItMatters: r.whyItMatters || r.why || '' })) : [];
+  e.checklist = Array.isArray(e.checklist) ? e.checklist.map(c => ({ roundTitle: c.roundTitle || c.name || '', items: c.items || [] })) : [];
+  e.plan7Days = Array.isArray(e.plan7Days) ? e.plan7Days.map(p => ({ day: p.day || 0, focus: p.focus || p.title || '', tasks: p.tasks || p.tasks || [] })) : [];
+  // backward compatibility: if plan exists as 'plan', map it
+  if ((!e.plan7Days || e.plan7Days.length === 0) && Array.isArray(e.plan)) {
+    e.plan7Days = e.plan.map(p => ({ day: p.day || 0, focus: p.title || '', tasks: p.tasks || [] }));
+  }
+  e.questions = Array.isArray(e.questions) ? e.questions : (Array.isArray(e.questions) ? e.questions : []);
+  e.baseScore = typeof e.baseScore === 'number' ? e.baseScore : (typeof e.readinessScore === 'number' ? e.readinessScore : computeReadiness(e.extractedSkills || {}, e.company || '', e.role || '', e.jdText || ''));
+  e.skillConfidenceMap = e.skillConfidenceMap && typeof e.skillConfidenceMap === 'object' ? e.skillConfidenceMap : {};
+  const mapKeys = Object.keys(e.skillConfidenceMap || {});
+  if (mapKeys.length === 0) {
+    // initialize from skills
+    const all = Object.values(e.extractedSkills || {}).flat();
+    all.forEach(s => { e.skillConfidenceMap[s] = 'practice'; });
+  }
+  // finalScore is baseScore adjusted by skillConfidenceMap
+  let adj = 0;
+  Object.keys(e.skillConfidenceMap).forEach((skill) => {
+    if (e.skillConfidenceMap[skill] === 'know') adj += 2;
+    else if (e.skillConfidenceMap[skill] === 'practice') adj -= 2;
+  });
+  e.finalScore = typeof e.finalScore === 'number' ? e.finalScore : Math.max(0, Math.min(100, e.baseScore + adj));
+  e.updatedAt = e.updatedAt || (isNew ? now : e.updatedAt || e.createdAt);
+  return e;
 }
