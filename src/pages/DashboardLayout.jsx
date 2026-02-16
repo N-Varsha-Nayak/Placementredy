@@ -1,5 +1,5 @@
-import { Outlet, useLocation, NavLink } from "react-router-dom";
-import { LayoutDashboard, BookOpen, ClipboardCheck, FolderOpen, User, ClipboardList, Rocket } from "lucide-react";
+import { Outlet, useLocation, NavLink, useNavigate } from "react-router-dom";
+import { LayoutDashboard, BookOpen, ClipboardCheck, FolderOpen, User, ClipboardList, FileText, Rocket, LogOut } from "lucide-react";
 
 const navItems = [
   { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
@@ -8,11 +8,17 @@ const navItems = [
   { title: "Resources", path: "/dashboard/resources", icon: FolderOpen },
   { title: "Profile", path: "/dashboard/profile", icon: User },
   { title: "Test Checklist", path: "/dashboard/test", icon: ClipboardList },
+  { title: "Build Proof", path: "/dashboard/proof", icon: FileText },
   { title: "Ship", path: "/dashboard/ship", icon: Rocket },
 ];
 
 const DashboardLayout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen flex w-full">
@@ -44,6 +50,7 @@ const DashboardLayout = () => {
             );
           })}
         </nav>
+        
       </aside>
 
       {/* Main area */}
@@ -54,8 +61,18 @@ const DashboardLayout = () => {
             Placement Prep
           </h1>
 
-          <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center">
-            <User className="w-5 h-5 text-purple-600" />
+          <div className="flex items-center gap-4">
+            <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center">
+              <User className="w-5 h-5 text-purple-600" />
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-md hover:bg-gray-100 transition-colors"
+              title="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
+            </button>
           </div>
         </header>
 
@@ -69,3 +86,4 @@ const DashboardLayout = () => {
 };
 
 export default DashboardLayout;
+

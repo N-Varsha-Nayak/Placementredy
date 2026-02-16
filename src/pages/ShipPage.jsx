@@ -1,24 +1,49 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getTestChecklistStatus } from './TestChecklist';
+import { getProofStatus, getStepsCompleted } from './ProofPage';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 
 const TOTAL_TESTS = 10;
+const TOTAL_STEPS = 8;
+
+function isValidUrl(str) {
+  try {
+    const url = new URL(str);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch (_) {
+    return false;
+  }
+}
 
 export default function ShipPage() {
   const navigate = useNavigate();
-  const status = getTestChecklistStatus();
-  const passed = Object.values(status).filter(Boolean).length;
-  const allPassed = passed === TOTAL_TESTS;
+  const testStatus = getTestChecklistStatus();
+  const proof = getProofStatus();
+  const steps = getStepsCompleted();
+  
+  const testsPassingCount = Object.values(testStatus).filter(Boolean).length;
+  const allTestsPassed = testsPassingCount === TOTAL_TESTS;
+  
+  const stepsCompletedCount = Object.values(steps).filter(Boolean).length;
+  const allStepsCompleted = stepsCompletedCount === TOTAL_STEPS;
+  
+  const allLinksProvided = proof.lovable.trim() && proof.github.trim() && proof.deployment.trim();
+  const allLinksValid = allLinksProvided && 
+    isValidUrl(proof.lovable) && 
+    isValidUrl(proof.github) && 
+    isValidUrl(proof.deployment);
+  
+  const isShipped = allStepsCompleted && allTestsPassed && allLinksValid;
 
   useEffect(() => {
-    if (!allPassed) {
+    if (!allTestsPassed) {
       // Redirect to test checklist if not all tests passed
       navigate('/dashboard/test', { replace: true });
     }
-  }, [allPassed, navigate]);
+  }, [allTestsPassed, navigate]);
 
-  if (!allPassed) {
+  if (!allTestsPassed) {
     return null; // Will redirect immediately
   }
 
@@ -26,8 +51,23 @@ export default function ShipPage() {
     <div className="app-container py-6">
       <div className="mb-6">
         <h1 className="text-2xl font-semibold">Deployment & Shipping</h1>
-        <p className="text-sm text-gray-600 mt-1">All tests passed. Ready to deploy the Placement Readiness Platform.</p>
+        <p className="text-sm text-gray-600 mt-1">Ready to deploy the Placement Readiness Platform.</p>
       </div>
+
+      {/* Shipped Status */}
+      {isShipped && (
+        <div className="mb-6 bg-green-50 border border-green-200 rounded-lg px-6 py-8">
+          <div className="text-center">
+            <div className="text-4xl font-bold text-green-700 mb-3">✓ SHIPPED</div>
+            <p className="text-green-700 text-base mb-4 leading-relaxed">
+              You built a real product.<br />
+              Not a tutorial. Not a clone.<br />
+              A structured tool that solves a real problem.
+            </p>
+            <p className="text-green-600 font-semibold text-sm">This is your proof of work.</p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
@@ -35,20 +75,24 @@ export default function ShipPage() {
             <CardTitle>Pre-Ship Checklist</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="bg-green-50 text-green-700 px-4 py-3 rounded-md text-sm mb-4">
-              ✓ All 10 quality tests passed
+            <div className={`${allTestsPassed ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'} px-4 py-3 rounded-md text-sm mb-4`}>
+              {allTestsPassed ? '✓' : '○'} All 10 quality tests passed ({testsPassingCount}/10)
             </div>
-            <ul className="space-y-2 text-sm text-gray-700">
-              <li>✓ Input validation working</li>
-              <li>✓ JD length warnings enabled</li>
-              <li>✓ Skills extraction reliable</li>
-              <li>✓ Company intel + round mapping functional</li>
-              <li>✓ Score stability verified</li>
-              <li>✓ Skill toggles responsive</li>
-              <li>✓ Data persistence confirmed</li>
-              <li>✓ History management robust</li>
-              <li>✓ Export/copy features working</li>
-              <li>✓ No console errors detected</li>
+            <div className={`${allStepsCompleted ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'} px-4 py-3 rounded-md text-sm mb-4`}>
+              {allStepsCompleted ? '✓' : '○'} All 8 development steps completed ({stepsCompletedCount}/8)
+            </div>
+            <div className={`${allLinksValid ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'} px-4 py-3 rounded-md text-sm mb-4`}>
+              {allLinksValid ? '✓' : '○'} All 3 proof links provided and valid
+            </div>
+            <ul className="space-y-2 text-sm text-gray-700 mt-4">
+              <li>• JD validation & short-JD warnings</li>
+              <li>• Deterministic skills extraction</li>
+              <li>• Adaptive round mapping (company-based)</li>
+              <li>• Live score adjustments</li>
+              <li>• Persistent history & toggles</li>
+              <li>• Export / copy functionality</li>
+              <li>• localStorage robustness</li>
+              <li>• Console error-free</li>
             </ul>
           </CardContent>
         </Card>
@@ -65,19 +109,20 @@ export default function ShipPage() {
               </div>
               <div>
                 <strong className="block text-gray-900">Status:</strong>
-                <span className="text-green-700 font-semibold">READY TO SHIP</span>
+                <span className={`font-semibold ${isShipped ? 'text-green-700' : 'text-yellow-700'}`}>
+                  {isShipped ? 'SHIPPED' : 'IN PROGRESS'}
+                </span>
               </div>
               <div>
                 <strong className="block text-gray-900">Local Data:</strong>
-                All analyses and test results stored in browser localStorage
+                localStorage (offline-first, no external APIs)
               </div>
               <div>
-                <strong className="block text-gray-900">Next Steps:</strong>
-                <ul className="list-disc pl-5 mt-1">
-                  <li>Review code on GitHub/GitLab</li>
-                  <li>Run final staging tests</li>
-                  <li>Deploy to production</li>
-                  <li>Monitor for console errors</li>
+                <strong className="block text-gray-900">Build Proof Links:</strong>
+                <ul className="list-disc pl-5 mt-2 space-y-1">
+                  <li>Lovable: {proof.lovable ? '✓' : '○'}</li>
+                  <li>GitHub: {proof.github ? '✓' : '○'}</li>
+                  <li>Deployment: {proof.deployment ? '✓' : '○'}</li>
                 </ul>
               </div>
             </div>
@@ -89,8 +134,8 @@ export default function ShipPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="bg-blue-50 text-blue-700 px-4 py-3 rounded-md text-sm">
-              <strong>Note:</strong> This deployment page is locked and only accessible after all tests pass. 
-              Navigate away to return to the checklist if needed.
+              <strong>Note:</strong> Shipping is locked behind quality tests and build proof collection. 
+              Visit <strong>Build Proof</strong> to finalize submission links.
             </div>
           </CardContent>
         </Card>

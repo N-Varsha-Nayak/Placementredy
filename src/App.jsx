@@ -8,6 +8,7 @@ import Resources from './pages/Resources';
 import Profile from './pages/Profile';
 import TestChecklist from './pages/TestChecklist';
 import ShipPage from './pages/ShipPage';
+import ProofPage from './pages/ProofPage';
 import './App.css';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
           <Route path="resources" element={<Resources />} />
           <Route path="profile" element={<Profile />} />
           <Route path="test" element={<TestChecklist />} />
+          <Route path="proof" element={<ProofPage />} />
           <Route path="ship" element={<ShipPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

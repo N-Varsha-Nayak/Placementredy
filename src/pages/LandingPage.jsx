@@ -26,29 +26,30 @@ const Landing = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-purple-700 to-purple-900 text-white py-32 px-6">
-        <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-5xl font-bold tracking-tight mb-4">
-            Ace Your Placement
-          </h1>
-          <p className="text-xl opacity-90 mb-10">
-            Practice, assess, and prepare for your dream job
-          </p>
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="bg-white text-purple-700 hover:bg-gray-100 font-semibold text-base px-8 py-3 rounded-lg transition"
-          >
-            Get Started
-          </button>
-        </div>
-      </section>
+    <div className="min-h-screen flex flex-col bg-white">
+      
+      <section className="hero-gradient min-h-[70vh] flex items-center justify-center text-white px-6">
+  <div className="text-center">
+    <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
+      Ace Your Placement
+    </h1>
+    <p className="text-lg opacity-90 mb-8">
+      Practice, assess, and prepare for your dream job
+    </p>
+    <button
+      onClick={() => navigate("/dashboard")}
+      className="bg-white text-purple-700 font-semibold px-8 py-3 rounded-lg shadow hover:shadow-lg transition"
+    >
+      Get Started
+    </button>
+  </div>
+</section>
+
 
       {/* Features */}
-      <section className="py-24 px-6 bg-gray-50">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-16 text-gray-900">
+      <section className="py-20 px-6 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-14 text-gray-900">
             Everything you need to get placed
           </h2>
 
@@ -59,7 +60,7 @@ const Landing = () => {
               return (
                 <div
                   key={feature.title}
-                  className="rounded-lg border border-gray-200 bg-white p-8 text-center hover:shadow-md transition-shadow"
+                  className="bg-white rounded-xl border border-gray-200 p-8 text-center shadow-sm hover:shadow-md transition"
                 >
                   <div className="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center mx-auto mb-5">
                     <Icon className="w-7 h-7 text-purple-600" />
@@ -78,7 +79,7 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 py-8 px-6 mt-auto bg-white">
+      <footer className="border-t border-gray-200 py-8 px-6 bg-white">
         <p className="text-center text-sm text-gray-500">
           © {new Date().getFullYear()} Placement Prep. All rights reserved.
         </p>
