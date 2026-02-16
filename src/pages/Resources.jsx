@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BookMarked, ArrowRight } from 'lucide-react';
 import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '../components/ui/Card';
-import { extractSkills, generateChecklist, generatePlan, generateQuestions, computeReadiness, saveHistory, getHistory, makeId, getHistoryItem, updateHistoryEntry } from '../utils/analyzer';
+import { extractSkills, generateChecklist, generatePlan, generateQuestions, computeReadiness, saveHistory, getHistory, makeId, getHistoryItem, updateHistoryEntry, generateCompanyIntel, generateRoundMapping } from '../utils/analyzer';
 
 export default function ResourcesPage() {
   const [tab, setTab] = useState('analyze'); // analyze | history | results
@@ -22,6 +22,8 @@ export default function ResourcesPage() {
     const plan = generatePlan(skills);
     const questions = generateQuestions(skills);
     const readinessScore = computeReadiness(skills, company, role, jdText);
+    const companyIntel = generateCompanyIntel(company || '');
+    const roundMapping = generateRoundMapping(skills, companyIntel);
     // flatten skills and initialize confidence map (default: 'practice')
     const allSkills = Object.values(skills).flat();
     const skillConfidenceMap = {};
@@ -39,6 +41,8 @@ export default function ResourcesPage() {
       questions,
       readinessScore,
       skillConfidenceMap,
+      companyIntel,
+      roundMapping,
     };
 
     entry.lastComputedScore = computeLiveScore(entry);
@@ -54,11 +58,21 @@ export default function ResourcesPage() {
   function openHistoryItem(id) {
     const item = getHistoryItem(id);
     if (item) {
+      // ensure company intel and rounds exist
+      if (!item.companyIntel) {
+        const intel = generateCompanyIntel(item.company || '');
+        item.companyIntel = intel;
+      }
+      if (!item.roundMapping) {
+        item.roundMapping = generateRoundMapping(item.extractedSkills || {}, item.companyIntel);
+      }
       // ensure skillConfidenceMap exists
       const allSkills = Object.values(item.extractedSkills || {}).flat();
       item.skillConfidenceMap = item.skillConfidenceMap || {};
       allSkills.forEach((s) => { if (!item.skillConfidenceMap[s]) item.skillConfidenceMap[s] = 'practice'; });
       item.lastComputedScore = computeLiveScore(item);
+      // persist any new intel/rounds
+      updateHistoryEntry(item);
       setResult({ ...item });
       setSelectedId(id);
       setTab('results');
@@ -399,6 +413,33 @@ export default function ResourcesPage() {
                 </div>
               </CardContent>
             </Card>
+            <div className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Company Intel & Round Mapping</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-sm text-gray-700 mb-3">
+                    <div className="font-medium">{result.companyIntel?.name || result.company || '—'}</div>
+                    <div className="text-xs text-gray-500">{result.companyIntel?.industry} • {result.companyIntel?.sizeCategory}</div>
+                    <div className="mt-2 text-sm">{result.companyIntel?.typicalHiringFocus}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-sm font-medium mb-2">Expected Interview Rounds</div>
+                    <ol className="list-decimal pl-5 text-sm space-y-2">
+                      {(result.roundMapping || []).map((r, idx) => (
+                        <li key={idx}>
+                          <div className="font-semibold">{r.name}</div>
+                          <div className="text-xs text-gray-600">{r.focus}</div>
+                          <div className="text-xs text-gray-500 mt-1">{r.why}</div>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
 

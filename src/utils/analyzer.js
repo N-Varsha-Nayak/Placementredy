@@ -175,6 +175,74 @@ export function computeReadiness(skillsByCat, company = '', role = '', jdText = 
   return Math.min(score, 100);
 }
 
+const KNOWN_ENTERPRISES = ['amazon', 'google', 'microsoft', 'facebook', 'meta', 'apple', 'ibm', 'infosys', 'tcs', 'wipro', 'accenture', 'cognizant', 'deloitte'];
+
+export function generateCompanyIntel(companyName = '') {
+  const name = (companyName || '').trim();
+  const lname = name.toLowerCase();
+  let industry = 'Technology Services';
+  // simple keyword industry guess
+  if (lname.includes('bank') || lname.includes('finance') || lname.includes('capital')) industry = 'Financial Services';
+  else if (lname.includes('health') || lname.includes('clinic') || lname.includes('hospital')) industry = 'Healthcare';
+  else if (lname.includes('edu') || lname.includes('univ') || lname.includes('academy')) industry = 'Education';
+
+  // size heuristic
+  let sizeCategory = 'Startup';
+  const isEnterprise = KNOWN_ENTERPRISES.some(k => lname.includes(k));
+  if (isEnterprise) sizeCategory = 'Enterprise';
+  else if (lname.includes('solutions') || lname.includes('systems')) sizeCategory = 'Mid-size';
+
+  // typical hiring focus
+  const typicalHiringFocus = sizeCategory === 'Enterprise'
+    ? 'Structured DSA + core fundamentals focus, standardized assessment processes.'
+    : 'Practical problem solving and hands-on stack depth; expect broader responsibilities.';
+
+  return { name, industry, sizeCategory, typicalHiringFocus, demoNote: 'Demo Mode: Company intel generated heuristically.' };
+}
+
+export function generateRoundMapping(skillsByCat, companyIntel) {
+  const rounds = [];
+  const hasDSA = (skillsByCat.core || []).includes('DSA');
+  const hasWeb = (skillsByCat.web || []).length > 0;
+  const hasData = (skillsByCat.data || []).length > 0;
+
+  if (!companyIntel || companyIntel.sizeCategory === 'Enterprise') {
+    // enterprise flows
+    if (hasDSA) {
+      rounds.push({ name: 'Round 1: Online Test', focus: 'DSA + Aptitude', why: 'Filters candidates at scale for core algorithmic ability.' });
+      rounds.push({ name: 'Round 2: Technical Interview', focus: 'DSA + Core CS', why: 'Deep assessment of algorithmic thinking and system fundamentals.' });
+      rounds.push({ name: 'Round 3: System / Project Interview', focus: 'Architecture & Stack', why: 'Evaluate system design and practical experience.' });
+      rounds.push({ name: 'Round 4: HR / Managerial', focus: 'Behavioral', why: 'Assess fit and communication.' });
+    } else if (hasWeb) {
+      rounds.push({ name: 'Round 1: Coding Assignment', focus: 'Practical coding', why: 'Validate implementation skills and code quality.' });
+      rounds.push({ name: 'Round 2: Technical Interview', focus: 'Core CS + Stack', why: 'Assess depth in relevant technologies.' });
+      rounds.push({ name: 'Round 3: System + Integration', focus: 'APIs & Systems', why: 'Understand production-readiness and trade-offs.' });
+      rounds.push({ name: 'Round 4: HR', focus: 'Behavioral', why: 'Cultural fit and role expectations.' });
+    } else {
+      rounds.push({ name: 'Round 1: Screening', focus: 'Aptitude', why: 'General screening for baseline skills.' });
+      rounds.push({ name: 'Round 2: Technical', focus: 'Core CS', why: 'Assess fundamentals relevant to the role.' });
+      rounds.push({ name: 'Round 3: HR', focus: 'Behavioral', why: 'Check alignment and communication.' });
+    }
+  } else {
+    // startup / mid-size flows
+    if (hasWeb) {
+      rounds.push({ name: 'Round 1: Practical Coding', focus: 'Build a small feature or task', why: 'Tests practical problem solving and speed.' });
+      rounds.push({ name: 'Round 2: System Discussion', focus: 'Design & Trade-offs', why: 'Assesses architectural thinking and ownership.' });
+      rounds.push({ name: 'Round 3: Culture Fit', focus: 'Team & Product', why: 'Evaluate adaptability and product sense.' });
+    } else if (hasDSA) {
+      rounds.push({ name: 'Round 1: Coding Challenge', focus: 'DSA', why: 'Quick check for algorithmic ability.' });
+      rounds.push({ name: 'Round 2: Technical + Projects', focus: 'Core CS & Projects', why: 'Assess real-world application and problem solving.' });
+      rounds.push({ name: 'Round 3: HR', focus: 'Behavioral', why: 'Discuss fit and expectations.' });
+    } else {
+      rounds.push({ name: 'Round 1: Practical Screening', focus: 'Aptitude & Basics', why: 'Baseline evaluation for quick hiring cycles.' });
+      rounds.push({ name: 'Round 2: Technical', focus: 'Role-specific skills', why: 'Ensure candidate can execute on required tasks.' });
+      rounds.push({ name: 'Round 3: HR', focus: 'Behavioral', why: 'Confirm fit.' });
+    }
+  }
+
+  return rounds;
+}
+
 // LocalStorage helpers
 const STORAGE_KEY = 'placement_history_v1';
 
