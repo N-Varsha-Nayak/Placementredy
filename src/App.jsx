@@ -6,6 +6,8 @@ import Practice from './pages/Practice';
 import Assessments from './pages/Assessments';
 import Resources from './pages/Resources';
 import Profile from './pages/Profile';
+import TestChecklist from './pages/TestChecklist';
+import ShipPage from './pages/ShipPage';
 import './App.css';
 
 function App() {
@@ -19,6 +21,8 @@ function App() {
           <Route path="assessments" element={<Assessments />} />
           <Route path="resources" element={<Resources />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="test" element={<TestChecklist />} />
+          <Route path="ship" element={<ShipPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

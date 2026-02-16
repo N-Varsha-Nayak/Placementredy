@@ -1,107 +1,71 @@
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Code2, FileText, BookMarked, User, Menu, LogOut, BookOpen } from 'lucide-react';
-import { useState } from 'react';
+import { Outlet, useLocation, NavLink } from "react-router-dom";
+import { LayoutDashboard, BookOpen, ClipboardCheck, FolderOpen, User, ClipboardList, Rocket } from "lucide-react";
 
-export default function DashboardLayout() {
-  const navigate = useNavigate();
+const navItems = [
+  { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+  { title: "Practice", path: "/dashboard/practice", icon: BookOpen },
+  { title: "Assessments", path: "/dashboard/assessments", icon: ClipboardCheck },
+  { title: "Resources", path: "/dashboard/resources", icon: FolderOpen },
+  { title: "Profile", path: "/dashboard/profile", icon: User },
+  { title: "Test Checklist", path: "/dashboard/test", icon: ClipboardList },
+  { title: "Ship", path: "/dashboard/ship", icon: Rocket },
+];
+
+const DashboardLayout = () => {
   const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
-  const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/dashboard/practice', label: 'Practice', icon: Code2 },
-    { path: '/dashboard/assessments', label: 'Assessments', icon: FileText },
-    { path: '/dashboard/resources', label: 'Resources', icon: BookMarked },
-    { path: '/dashboard/profile', label: 'Profile', icon: User },
-  ];
-
-  const isActive = (path) => location.pathname === path;
-
-  const handleLogout = () => {
-    navigate('/');
-  };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="min-h-screen flex w-full">
       {/* Sidebar */}
-      <aside
-        className={`${
-          sidebarOpen ? 'w-64' : 'w-20'
-        } bg-gradient-to-b from-gray-900 to-gray-800 text-white transition-all duration-300 ease-in-out fixed h-full z-40 overflow-y-auto`}
-      >
-        {/* Sidebar Header */}
-        <div className="p-6 border-b border-gray-700 sticky top-0 bg-gray-900">
-          <div className="flex items-center justify-between">
-            {sidebarOpen && (
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-white" />
-                </div>
-                <h1 className="text-lg font-bold">PlacementPrep</h1>
-              </div>
-            )}
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-          </div>
+      <aside className="w-60 bg-slate-900 text-white flex flex-col shrink-0">
+        <div className="px-6 py-6 border-b border-white/10">
+          <h2 className="text-lg font-bold">Placement Prep</h2>
         </div>
 
-        {/* Nav Items */}
-        <nav className="p-4 space-y-2 flex-1">
+        <nav className="flex-1 px-3 space-y-1 mt-4">
           {navItems.map((item) => {
+            const isActive = location.pathname === item.path;
             const Icon = item.icon;
-            const active = isActive(item.path);
+
             return (
-              <button
+              <NavLink
                 key={item.path}
-                onClick={() => navigate(item.path)}
-                className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200 ${
-                  active
-                    ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                to={item.path}
+                end={item.path === "/dashboard"}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-white/15 text-white"
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
                 }`}
               >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                {sidebarOpen && <span className="font-medium">{item.label}</span>}
-              </button>
+                <Icon className="w-5 h-5" />
+                <span>{item.title}</span>
+              </NavLink>
             );
           })}
         </nav>
-
-        {/* Logout Button */}
-        <div className="p-4 border-t border-gray-700">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-4 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition-all duration-200"
-          >
-            <LogOut className="w-5 h-5 flex-shrink-0" />
-            {sidebarOpen && <span className="font-medium">Logout</span>}
-          </button>
-        </div>
       </aside>
 
-      {/* Main Content */}
-      <div className={`${sidebarOpen ? 'ml-64' : 'ml-20'} flex-1 flex flex-col transition-all duration-300 ease-in-out`}>
+      {/* Main area */}
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-8 py-4 shadow-sm sticky top-0 z-30">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">Placement Prep</h2>
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center cursor-pointer hover:shadow-lg transition-shadow">
-                <span className="text-white font-semibold text-sm">U</span>
-              </div>
-            </div>
+        <header className="h-16 border-b border-gray-200 flex items-center justify-between px-8 bg-white shrink-0">
+          <h1 className="text-lg font-semibold text-gray-900">
+            Placement Prep
+          </h1>
+
+          <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center">
+            <User className="w-5 h-5 text-purple-600" />
           </div>
         </header>
 
-        {/* Content Area */}
-        <main className="flex-1 overflow-auto p-8">
+        {/* Content */}
+        <main className="flex-1 p-8 overflow-y-auto bg-gray-50">
           <Outlet />
         </main>
       </div>
     </div>
   );
-}
+};
+
+export default DashboardLayout;
